@@ -984,7 +984,7 @@ const LOADS = [
 function updateLoadRec(kg) {
   const el = document.getElementById('loadRec');
   if (kg <= 0) { el.style.display = 'none'; return; }
-  const load = LOADS.find(l => kg <= l.maxKg) || LOADS[LOADS.length - 1];
+  const load = LOADS.find(l => kg <= l.maxKg * 1.1) || LOADS[LOADS.length - 1];
   const nearLimit = kg >= load.maxKg * 0.85;
   const nextLoad = LOADS[LOADS.indexOf(load) + 1];
   document.getElementById('loadName').textContent = load.name;
