@@ -960,7 +960,8 @@ function renderQuote() {
   document.getElementById('totalWeight').textContent = `${kg} kg`;
 }
 
-const SAVED_KEY = '', SAVED_KEY); }
+const SAVED_KEY = '';
+if(SAVED_KEY) { const inp = document.getElementById('apiKeyInput'); if(inp) inp.value = SAVED_KEY; localStorage.setItem('anthropic_api_key', SAVED_KEY); }
 buildCats();
 renderItems();
 renderQuote();
@@ -1042,14 +1043,12 @@ async function handlePhoto(event) {
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://anthropic-proxy.steven-d3e.workers.dev', {
       signal: controller.signal,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-allow-browser': 'true'
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
