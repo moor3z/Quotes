@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Tidy Up Ltd — Quote</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:       #080a0e;
+  --surface:  #0f1117;
+  --card:     #161a23;
+  --card2:    #1c2030;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.12);
+  --accent:   #00b7eb;
+  --accent-glow: rgba(0,183,235,0.2);
+  --accent-soft: rgba(0,183,235,0.08);
+  --text:     #f0f2f5;
+  --text2:    #8b95a8;
+  --text3:    #4a5568;
+  --sans:     'DM Sans', sans-serif;
+  --mono:     'DM Mono', monospace;
+  --hh:       56px;
+  --radius:   14px;
+  --radius-sm: 8px;
+}
+
+html { height: 100%; }
+body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; -webkit-font-smoothing: antialiased; overflow: hidden; }
+
+/* scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* ════ HEADER ════ */
+.hdr {
+  position: fixed; inset: 0 0 auto 0; height: var(--hh); z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  background: rgba(8,10,14,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.hdr-logo { display: flex; align-items: center; gap: 10px; }
+.hdr-logo img { height: 28px; width: auto; }
+.hdr-logo-txt { font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.03em; }
+.hdr-logo-txt em { color: var(--accent); font-style: normal; }
+.hdr-right { display: flex; align-items: center; gap: 8px; }
+.hdr-date { font-family: var(--mono); font-size: 11px; color: var(--text2); background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; }
+.hdr-export {
+  background: var(--accent); color: #001a22;
+  font-family: var(--sans); font-size: 13px; font-weight: 700;
+  border: none; border-radius: var(--radius-sm); padding: 9px 18px;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.hdr-export:hover { opacity: 0.9; box-shadow: 0 0 30px var(--accent-glow); }
+
+/* ════ LAYOUT ════ */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  height: 100vh;
+  padding-top: var(--hh);
+}
+
+/* ════ LEFT — CATALOGUE ════ */
+.catalogue {
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+
+/* Search */
+.search-bar {
+  flex-shrink: 0;
+  padding: 14px 16px 10px;
+  background: var(--surface);
+}
+.search-inner {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 11px 16px;
+  transition: border-color 0.2s;
+}
+.search-inner:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search-icon { color: var(--text3); font-size: 14px; flex-shrink: 0; }
+.search-input { flex: 1; background: none; border: none; color: var(--text); font-family: var(--sans); font-size: 15px; outline: none; }
+.search-input::placeholder { color: var(--text3); }
+
+/* Category pills */
+.cat-scroll {
+  flex-shrink: 0;
+  display: flex; gap: 6px;
+  overflow-x: auto; padding: 0 16px 12px;
+  background: var(--surface);
+  scrollbar-width: none;
+}
+.cat-scroll::-webkit-scrollbar { display: none; }
+.cat-pill {
+  flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 100px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--text2); font-family: var(--sans); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s; white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.cat-pill .pill-icon { font-size: 15px; }
+.cat-pill:hover { border-color: var(--border2); color: var(--text); }
+.cat-pill.active {
+  background: var(--accent); border-color: var(--accent);
+  color: #001a22; box-shadow: 0 0 16px var(--accent-glow);
+}
+
+/* Grid */
+.grid-wrap {
+  flex: 1; overflow-y: auto;
+  padding: 12px 16px 20px;
+  background: var(--bg);
+}
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+/* Item card */
+.icard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 14px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.icard::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--accent-soft) 0%, transparent 60%);
+  opacity: 0; transition: opacity 0.18s;
+}
+.icard:hover { border-color: rgba(0,183,235,0.4); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.icard:hover::before { opacity: 1; }
+.icard:active { transform: translateY(0); }
+
+.icard-icon { font-size: 28px; line-height: 1; margin-bottom: 4px; position: relative; z-index: 1; }
+.icard-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; position: relative; z-index: 1; flex: 1; }
+.icard-sub { display: flex; align-items: center; gap: 8px; position: relative; z-index: 1; }
+.icard-kg { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+.icard-price { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--accent); }
+.icard-btn {
+  margin-top: 8px; width: 100%;
+  background: transparent; border: 1px solid var(--border2);
+  color: var(--text); font-family: var(--sans); font-size: 12px; font-weight: 600;
+  border-radius: var(--radius-sm); padding: 7px;
+  cursor: pointer; transition: all 0.18s;
+  position: relative; z-index: 1;
+}
+.icard-btn:hover, .icard:hover .icard-btn { background: var(--accent); border-color: var(--accent); color: #001a22; }
+
+.empty-msg { color: var(--text3); font-size: 14px; text-align: center; padding: 48px 20px; grid-column: 1/-1; }
+
+/* Custom item */
+.custom-row {
+  flex-shrink: 0; display: flex; gap: 8px;
+  padding: 10px 16px 12px; background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.ci {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  color: var(--text); font-family: var(--sans); font-size: 14px; outline: none;
+  transition: border-color 0.18s;
+}
+.ci:focus { border-color: var(--accent); }
+.ci::placeholder { color: var(--text3); }
+.ci-price { width: 90px; flex: none; }
+.ci-add {
+  background: var(--card2); border: 1px solid var(--border2);
+  color: var(--text); font-size: 20px; font-weight: 300;
+  border-radius: var(--radius-sm); width: 44px; height: 44px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.18s; flex-shrink: 0;
+}
+.ci-add:hover { background: var(--accent); border-color: var(--accent); color: #001a22; }
+
+/* ════ RIGHT — QUOTE ════ */
+.quote-panel {
+  display: flex; flex-direction: column;
+  overflow: hidden; background: var(--surface);
+}
+
+.qp-head {
+  flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.qp-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text2); }
+.qp-count {
+  font-family: var(--mono); font-size: 12px;
+  color: var(--accent); background: var(--accent-soft);
+  border: 1px solid rgba(0,183,235,0.2); border-radius: 100px;
+  padding: 3px 10px;
+}
+
+.qp-lines { flex: 1; overflow-y: auto; }
+
+.ql {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 20px; border-bottom: 1px solid var(--border);
+  animation: fadeSlide 0.2s ease;
+}
+@keyframes fadeSlide { from { opacity:0; transform: translateX(8px); } to { opacity:1; transform: none; } }
+.ql-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.35; min-width: 0; word-break: break-word; }
+.ql-ctrl { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.qb {
+  width: 24px; height: 24px; border-radius: 6px;
+  background: var(--card2); border: 1px solid var(--border);
+  color: var(--text2); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.qb:hover { border-color: var(--accent); color: var(--accent); }
+.qv { font-family: var(--mono); font-size: 13px; min-width: 18px; text-align: center; color: var(--text); }
+.ql-kg { font-family: var(--mono); font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.ql-amt { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--accent); flex-shrink: 0; min-width: 52px; text-align: right; }
+.ql-del { background: none; border: none; color: var(--text3); font-size: 13px; cursor: pointer; padding: 4px; flex-shrink: 0; transition: color 0.15s; }
+.ql-del:hover { color: #f87171; }
+
+.qp-notes {
+  flex-shrink: 0; padding: 12px 20px;
+  border-top: 1px solid var(--border);
+}
+.notes-ta {
+  width: 100%; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  color: var(--text); font-family: var(--sans); font-size: 14px;
+  outline: none; resize: none; min-height: 56px;
+  transition: border-color 0.18s;
+}
+.notes-ta:focus { border-color: var(--accent); }
+.notes-ta::placeholder { color: var(--text3); }
+
+.qp-totals {
+  flex-shrink: 0; padding: 14px 20px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.t-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; }
+.t-lbl { font-size: 13px; font-weight: 500; color: var(--text2); }
+.t-val { font-family: var(--mono); font-size: 13px; color: var(--text); }
+.t-div { height: 1px; background: var(--border); margin: 10px 0; }
+.grand-row { display: flex; justify-content: space-between; align-items: baseline; }
+.grand-lbl { font-size: 15px; font-weight: 700; color: var(--text); }
+.grand-val {
+  font-family: var(--mono); font-size: 30px; font-weight: 500; color: var(--accent);
+  text-shadow: 0 0 30px var(--accent-glow);
+}
+
+/* ════ PHOTO SCAN ════ */
+.hdr-photo {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--card2); border: 1px solid var(--border2);
+  color: var(--text); font-family: var(--sans); font-size: 13px; font-weight: 600;
+  border-radius: var(--radius-sm); padding: 8px 14px;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.01em;
+}
+.hdr-photo:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Scan modal overlay */
+.scan-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  align-items: center; justify-content: center; padding: 24px;
+}
+.scan-overlay.visible { display: flex; }
+
+.scan-modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 20px; width: 100%; max-width: 480px;
+  overflow: hidden; animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn { from { opacity:0; transform: scale(0.92) translateY(16px); } to { opacity:1; transform: none; } }
+
+.scan-img-wrap {
+  position: relative; background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.scan-img-wrap img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+.scan-img-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.7));
+}
+
+.scan-body { padding: 20px; }
+.scan-status {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.scan-spinner {
+  width: 20px; height: 20px; border: 2px solid var(--border2);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.scan-status-txt { font-size: 14px; font-weight: 500; color: var(--text2); }
+
+.scan-results { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; }
+
+.scan-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  animation: fadeSlide 0.2s ease;
+}
+.scan-item-check {
+  width: 20px; height: 20px; border-radius: 5px;
+  border: 2px solid var(--border2); background: none;
+  cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.scan-item-check.checked { background: var(--accent); border-color: var(--accent); }
+.scan-item-check.checked::after { content: '✓'; font-size: 12px; color: #001a22; font-weight: 700; }
+.scan-item-info { flex: 1; min-width: 0; }
+.scan-item-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.scan-item-meta { font-size: 12px; color: var(--text2); font-family: var(--mono); }
+.scan-item-price { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); flex-shrink: 0; }
+
+.scan-footer {
+  display: flex; gap: 8px; padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.scan-cancel {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  color: var(--text2); font-family: var(--sans); font-size: 14px; font-weight: 600;
+  border-radius: var(--radius-sm); padding: 12px; cursor: pointer;
+  transition: all 0.15s;
+}
+.scan-cancel:hover { border-color: var(--border2); color: var(--text); }
+.scan-confirm {
+  flex: 2; background: var(--accent); border: none; color: #001a22;
+  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  border-radius: var(--radius-sm); padding: 12px; cursor: pointer;
+  transition: all 0.2s; box-shadow: 0 0 20px var(--accent-glow);
+}
+.scan-confirm:hover { opacity: 0.9; }
+.scan-confirm:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+.scan-error { color: #f87171; font-size: 13px; text-align: center; padding: 8px 0; }
+
+/* ════ MOBILE ════ */
+@media (max-width: 700px) {
+  body { overflow: auto; height: auto; }
+  .layout { 
+    display: flex; flex-direction: column;
+    height: auto; min-height: calc(100vh - var(--hh));
+    overflow: visible;
+    padding-top: var(--hh);
+  }
+  .catalogue { 
+    overflow: visible; flex-shrink: 0; 
+    border-right: none; border-bottom: 1px solid var(--border);
+  }
+  .grid-wrap { overflow: visible; height: auto; }
+  .items-grid { grid-template-columns: repeat(2, 1fr); }
+  .quote-panel { overflow: visible; flex-shrink: 0; }
+  .qp-lines { overflow: visible; max-height: none; height: auto; }
+  .icard { padding: 12px 10px 10px; }
+  .icard-icon { font-size: 24px; }
+  .icard-name { font-size: 12px; }
+}
+
+/* ════ PRINT ════ */
+@media print {
+  body { background: #fff; color: #000; overflow: visible; }
+  .hdr { position: relative; background: #fff; border-bottom: 2px solid #000; box-shadow: none; backdrop-filter: none; }
+  .layout { display: block; height: auto; padding-top: 0; }
+  .catalogue { display: none; }
+  .quote-panel { height: auto; overflow: visible; background: #fff; }
+  .qp-lines { overflow: visible; }
+  .hdr-export, .custom-row, .ql-del, .ql-ctrl { display: none; }
+  .qp-totals { background: #fff; }
+  .t-lbl, .t-val, .grand-lbl { color: #000; }
+  .grand-val, .ql-amt, .icard-price { color: #0077aa; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <img src="https://tidyupltd.com/wp-content/uploads/2024/09/cropped-cropped-clearance2-1-png-scaled-1-180x77.avif"
+         alt="Tidy Up Ltd"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+    <span class="hdr-logo-txt" style="display:none;">Tidy Up <em>Ltd</em></span>
+  </div>
+  <div class="hdr-right">
+    <button class="hdr-photo" onclick="document.getElementById('settingsOverlay').classList.add('visible')" title="Settings" style="padding:8px 12px;">⚙</button>
+    <button class="hdr-photo" onclick="document.getElementById('photoCam').click()" title="Take a photo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Camera
+    </button>
+    <button class="hdr-photo" onclick="document.getElementById('photoGal').click()" title="Choose from gallery">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Gallery
+    </button>
+    <input type="file" id="photoCam" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+    <input type="file" id="photoGal" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+  </div>
+</header>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT: CATALOGUE -->
+  <div class="catalogue">
+
+    <div class="search-bar">
+      <div class="search-inner">
+        <span class="search-icon">⌕</span>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search all items…" oninput="filterItems()" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="cat-scroll" id="catScroll"></div>
+
+    <div class="grid-wrap">
+      <div class="items-grid" id="itemList"></div>
+    </div>
+
+    <div class="custom-row">
+      <input class="ci" id="customName" type="text" placeholder="Custom item…">
+      <input class="ci ci-price" id="customPrice" type="number" min="0" step="0.01" placeholder="£0">
+      <button class="ci-add" onclick="addCustomItem()">+</button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: QUOTE -->
+  <div class="quote-panel">
+
+    <div class="qp-head">
+      <span class="qp-title">Quote</span>
+      <span class="qp-count" id="quoteCount">0 items</span>
+    </div>
+
+    <div class="qp-lines" id="quoteLines"></div>
+
+    <div class="qp-notes">
+      <textarea class="notes-ta" placeholder="Notes, access details, special instructions…" rows="2"></textarea>
+    </div>
+
+    <div class="qp-totals">
+      <div class="t-row"><span class="t-lbl">Subtotal</span><span class="t-val" id="subtotal">£0.00</span></div>
+      <div class="t-row"><span class="t-lbl">VAT 20%</span><span class="t-val" id="vatAmt">£0.00</span></div>
+      <div class="t-row"><span class="t-lbl">Est. Weight</span><span class="t-val" id="totalWeight">0 kg</span></div>
+      <div class="t-div"></div>
+      <div class="grand-row">
+        <span class="grand-lbl">Total inc. VAT</span>
+        <span class="grand-val" id="grandTotal">£0.00</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="scan-overlay" id="settingsOverlay" onclick="if(event.target===this)this.classList.remove('visible')">
+  <div class="scan-modal" style="max-width:400px">
+    <div class="scan-body">
+      <div style="margin-bottom:16px">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">⚙ Settings</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.5">Your Anthropic API key is needed for photo scanning. It's saved in your browser only — never sent anywhere except Anthropic's API.</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.05em;text-transform:uppercase;display:block;margin-bottom:8px">Anthropic API Key</label>
+        <input id="apiKeyInput" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false"
+          style="width:100%;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-family:var(--mono);font-size:14px;outline:none;transition:border-color 0.18s;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Get your key at <span style="color:var(--accent)">console.anthropic.com</span></div>
+    </div>
+    <div class="scan-footer">
+      <button class="scan-cancel" onclick="document.getElementById('settingsOverlay').classList.remove('visible')">Cancel</button>
+      <button class="scan-confirm" onclick="saveApiKey()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCAN MODAL -->
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scan-modal">
+    <div class="scan-img-wrap" id="scanImgWrap" style="display:none">
+      <img id="scanPreview" src="" alt="Room photo">
+      <div class="scan-img-overlay"></div>
+    </div>
+    <div class="scan-body">
+      <div class="scan-status" id="scanStatus">
+        <div class="scan-spinner" id="scanSpinner"></div>
+        <span class="scan-status-txt" id="scanStatusTxt">Analysing your photo…</span>
+      </div>
+      <div class="scan-results" id="scanResults"></div>
+      <div class="scan-error" id="scanError" style="display:none"></div>
+    </div>
+    <div class="scan-footer">
+      <button class="scan-cancel" onclick="closeScan()">Cancel</button>
+      <button class="scan-confirm" id="scanConfirm" onclick="confirmScan()" disabled>Add to Quote</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CAT_ICONS = {
+  'Lounge':'🛋️','Bedroom':'🛏️','Kitchen & Dining':'🍽️',
+  'Fridges & Freezers':'🧊','Appliances':'🔌','Bathroom':'🚿',
+  'Soft Furnishings':'🧶','Office & Study':'💼','Technology':'📺',
+  'Instruments & Music':'🎵','Garden & DIY':'🌿','Sports & Leisure':'⚽',
+  'Games & Toys':'🎮','Baby & Nursery':'👶','Pets':'🐾',
+  'Mobility & Medical':'♿','Garage & Clearance':'📦'
+};
+
+function itemIcon(n) {
+  n = n.toLowerCase();
+  if (n.includes('sofa')||n.includes('armchair')||n.includes('reclining')) return '🛋️';
+  if (n.includes('bed frame')||n.includes('bunk')) return '🛏️';
+  if (n.includes('mattress')) return '😴';
+  if (n.includes('wardrobe')) return '👗';
+  if (n.includes('fridge')||n.includes('freezer')) return '🧊';
+  if (n.includes('washing machine')) return '🌀';
+  if (n.includes('dryer')||n.includes('tumble')) return '💨';
+  if (n.includes('dishwasher')) return '🍽️';
+  if (n.includes('oven')||n.includes('cooker')||n.includes('stove')) return '🔥';
+  if (n.includes('microwave')) return '📡';
+  if (n.includes('piano')||n.includes('keyboard')||n.includes('organ')) return '🎹';
+  if (n.includes('guitar')) return '🎸';
+  if (n.includes('drum')) return '🥁';
+  if (n.includes('tv')||n.includes('television')) return '📺';
+  if (n.includes('mirror')) return '🪞';
+  if (n.includes('desk')) return '🖥️';
+  if (n.includes('chair')) return '🪑';
+  if (n.includes('table')) return '🪑';
+  if (n.includes('bookcase')||n.includes('shelv')) return '📚';
+  if (n.includes('toilet')) return '🚽';
+  if (n.includes('bath')) return '🛁';
+  if (n.includes('shower')) return '🚿';
+  if (n.includes('bicycle')||n.includes('bike')) return '🚲';
+  if (n.includes('trampoline')) return '🤸';
+  if (n.includes('hot tub')) return '🛁';
+  if (n.includes('shed')) return '🏚️';
+  if (n.includes('mower')) return '🌿';
+  if (n.includes('cot')||n.includes('crib')) return '👶';
+  if (n.includes('pram')||n.includes('pushchair')) return '🍼';
+  if (n.includes('dog')||n.includes('pet')) return '🐕';
+  if (n.includes('wheelchair')||n.includes('mobility')) return '♿';
+  if (n.includes('box')||n.includes('bag')||n.includes('clutter')) return '📦';
+  if (n.includes('carpet')||n.includes('rug')) return '🟫';
+  if (n.includes('curtain')||n.includes('blind')) return '🪟';
+  if (n.includes('computer')||n.includes('laptop')) return '💻';
+  if (n.includes('printer')) return '🖨️';
+  if (n.includes('safe')) return '🔒';
+  if (n.includes('door')) return '🚪';
+  if (n.includes('chest')) return '🗄️';
+  if (n.includes('side table')||n.includes('coffee')) return '☕';
+  if (n.includes('lamp')) return '💡';
+  if (n.includes('heater')) return '🔥';
+  if (n.includes('fan')) return '💨';
+  return '📋';
+}
+
+const PRESETS = [
+
+  // Lounge
+  { cat:"Lounge", name:"Armchair (sofa or lounge chair)", price:35, kg:25 },
+  { cat:"Lounge", name:"Sofa (2-seater)", price:60, kg:45 },
+  { cat:"Lounge", name:"Sofa (3-seater)", price:70, kg:60 },
+  { cat:"Lounge", name:"Corner Sofa", price:80, kg:90 },
+  { cat:"Lounge", name:"Sofa Bed (single 1 seater - no mattress)", price:35, kg:40 },
+  { cat:"Lounge", name:"Sofa Bed (double/2 seater)", price:65, kg:70 },
+  { cat:"Lounge", name:"Sofa Bed (L-shape or 3/4 seater - no mattress)", price:95, kg:100 },
+  { cat:"Lounge", name:"Sofa Bed (L-shape or 3/4 seater - with mattress)", price:105, kg:120 },
+  { cat:"Lounge", name:"Footstool (sofa pouffe)", price:12, kg:8 },
+  { cat:"Lounge", name:"Rocking Chair (no fabric)", price:14, kg:10 },
+  { cat:"Lounge", name:"Rocking Chair (fabric)", price:29, kg:12 },
+  { cat:"Lounge", name:"Coffee Table (small)", price:12, kg:12 },
+  { cat:"Lounge", name:"Coffee Table", price:20, kg:20 },
+  { cat:"Lounge", name:"Side Table", price:9, kg:10 },
+  { cat:"Lounge", name:"TV Stand - Small (up to 80cm)", price:14, kg:15 },
+  { cat:"Lounge", name:"TV Stand - Medium (up to 120cm)", price:17, kg:20 },
+  { cat:"Lounge", name:"TV Stand / Unit (large)", price:20, kg:25 },
+  { cat:"Lounge", name:"Bookcase (up to 60x200cm)", price:35, kg:25 },
+  { cat:"Lounge", name:"Bookcase (up to 130x220cm)", price:47, kg:40 },
+  { cat:"Lounge", name:"Display Cabinet", price:25, kg:40 },
+  { cat:"Lounge", name:"Sideboard", price:30, kg:50 },
+  { cat:"Lounge", name:"Fireplace Surround", price:35, kg:50 },
+  { cat:"Lounge", name:"Mirror Small (up to 15 inch/38cm)", price:4, kg:3 },
+  { cat:"Lounge", name:"Mirror Medium (up to 30 inch/76cm)", price:7.50, kg:6 },
+  { cat:"Lounge", name:"Mirror Large (up to 60 inch/150cm)", price:15, kg:10 },
+  { cat:"Lounge", name:"Large Rug", price:20, kg:12 },
+  { cat:"Lounge", name:"Rug (small)", price:10, kg:5 },
+  { cat:"Lounge", name:"TV (up to 20 inch)", price:22, kg:6 },
+  { cat:"Lounge", name:"TV (up to 32 inch)", price:15, kg:8 },
+  { cat:"Lounge", name:"TV (33-55 inch)", price:25, kg:15 },
+  { cat:"Lounge", name:"TV (56 inch+)", price:35, kg:25 },
+  { cat:"Lounge", name:"Heater (electric)", price:4, kg:3 },
+  { cat:"Lounge", name:"Heater (oil-filled)", price:7, kg:8 },
+  { cat:"Lounge", name:"Fan", price:5, kg:3 },
+  { cat:"Lounge", name:"Reclining or Corner Sofa", price:90, kg:90 },
+  { cat:"Lounge", name:"Lounge Chair (lightweight)", price:35, kg:12 },
+  { cat:"Lounge", name:"Pouffe", price:12, kg:6 },
+  { cat:"Lounge", name:"Small Furniture Item", price:40, kg:15 },
+  { cat:"Lounge", name:"Medium Furniture Item", price:50, kg:35 },
+  { cat:"Lounge", name:"Large Furniture Item", price:70, kg:80 },
+
+  // Bedroom
+  { cat:"Bedroom", name:"Single Bed Frame", price:30, kg:20 },
+  { cat:"Bedroom", name:"Double Bed Frame", price:40, kg:30 },
+  { cat:"Bedroom", name:"King Bed Frame", price:50, kg:40 },
+  { cat:"Bedroom", name:"Bed Frame (bunk)", price:55, kg:50 },
+  { cat:"Bedroom", name:"Single Mattress", price:25, kg:15 },
+  { cat:"Bedroom", name:"Double Mattress / Mattress (double or larger)", price:40, kg:30 },
+  { cat:"Bedroom", name:"King Mattress", price:40, kg:35 },
+  { cat:"Bedroom", name:"Mattress Topper (any size)", price:5, kg:5 },
+  { cat:"Bedroom", name:"Wardrobe Single (up to 90cm, freestanding)", price:27, kg:35 },
+  { cat:"Bedroom", name:"Wardrobe Double (up to 160cm, freestanding)", price:37, kg:55 },
+  { cat:"Bedroom", name:"Wardrobe Triple (up to 240cm, freestanding)", price:47, kg:75 },
+  { cat:"Bedroom", name:"Wardrobe Quadruple (over 240cm, freestanding)", price:57, kg:90 },
+  { cat:"Bedroom", name:"Wardrobe (large / fitted)", price:70, kg:100 },
+  { cat:"Bedroom", name:"Chest of Drawers", price:35, kg:30 },
+  { cat:"Bedroom", name:"Dressing Table", price:35, kg:25 },
+  { cat:"Bedroom", name:"Bed Side Table", price:8, kg:8 },
+  { cat:"Bedroom", name:"Mirror Small (up to 15 inch/38cm)", price:4, kg:3 },
+  { cat:"Bedroom", name:"Mirror Medium (up to 30 inch/76cm)", price:7.50, kg:6 },
+  { cat:"Bedroom", name:"Mirror Large (up to 60 inch/150cm)", price:15, kg:10 },
+  { cat:"Bedroom", name:"Large Rug", price:20, kg:12 },
+  { cat:"Bedroom", name:"Curtains (per pair)", price:10, kg:3 },
+  { cat:"Bedroom", name:"Blind (per blind)", price:8, kg:2 },
+  { cat:"Bedroom", name:"Heater (electric)", price:4, kg:3 },
+  { cat:"Bedroom", name:"Heater (oil-filled)", price:7, kg:8 },
+  { cat:"Bedroom", name:"Fan", price:5, kg:3 },
+  { cat:"Bedroom", name:"Dehumidifier (up to 15kg)", price:12, kg:15 },
+  { cat:"Bedroom", name:"Trouser Press", price:9, kg:5 },
+
+  // Kitchen & Dining
+  { cat:"Kitchen & Dining", name:"Dining Table (4 person, not inc stone)", price:30, kg:40 },
+  { cat:"Kitchen & Dining", name:"Dining Table (6 person, not inc stone)", price:35, kg:55 },
+  { cat:"Kitchen & Dining", name:"Dining Table (8 person, not inc stone)", price:40, kg:70 },
+  { cat:"Kitchen & Dining", name:"Dining Chair (no fabric)", price:5, kg:5 },
+  { cat:"Kitchen & Dining", name:"Dining Chair (with fabric)", price:9, kg:7 },
+  { cat:"Kitchen & Dining", name:"High Chair (baby toddler)", price:9, kg:6 },
+  { cat:"Kitchen & Dining", name:"Kitchen Unit / Cupboard", price:20, kg:25 },
+  { cat:"Kitchen & Dining", name:"Larder Cupboard", price:20, kg:35 },
+  { cat:"Kitchen & Dining", name:"Stool (small, no fabric)", price:5, kg:4 },
+  { cat:"Kitchen & Dining", name:"Kitchen Worktop", price:25, kg:30 },
+  { cat:"Kitchen & Dining", name:"Oven (integrated)", price:20, kg:30 },
+  { cat:"Kitchen & Dining", name:"Cooker Stove (freestanding up to 60cm wide)", price:35, kg:55 },
+  { cat:"Kitchen & Dining", name:"Microwave", price:5, kg:12 },
+  { cat:"Kitchen & Dining", name:"Air Fryer", price:4, kg:5 },
+  { cat:"Kitchen & Dining", name:"Food Processor", price:2.50, kg:4 },
+  { cat:"Kitchen & Dining", name:"Small Appliances (bag)", price:10, kg:8 },
+
+  // Fridges & Freezers
+  { cat:"Fridges & Freezers", name:"Under-Counter Fridge or Freezer", price:75, kg:40 },
+  { cat:"Fridges & Freezers", name:"Fridge-Freezer (tall)", price:75, kg:65 },
+  { cat:"Fridges & Freezers", name:"Chest Freezer (up to 60cm wide)", price:74, kg:50 },
+  { cat:"Fridges & Freezers", name:"Chest Freezer (up to 120cm wide)", price:84, kg:75 },
+  { cat:"Fridges & Freezers", name:"Fridge Freezer (American style)", price:120, kg:100 },
+  { cat:"Fridges & Freezers", name:"Commercial Fridge / Freezer (glass front or other refrigerants)", price:200, kg:150 },
+
+  // Appliances
+  { cat:"Appliances", name:"Dishwasher (domestic)", price:35, kg:45 },
+  { cat:"Appliances", name:"Washing Machine (domestic)", price:35, kg:70 },
+  { cat:"Appliances", name:"Tumble Dryer (domestic)", price:30, kg:35 },
+  { cat:"Appliances", name:"Washer-Dryer", price:35, kg:75 },
+  { cat:"Appliances", name:"Extractor Fan / Hood", price:15, kg:8 },
+  { cat:"Appliances", name:"Vacuum Cleaner", price:5, kg:6 },
+  { cat:"Appliances", name:"Carpet Cleaner", price:6, kg:10 },
+  { cat:"Appliances", name:"Lamp", price:5, kg:3 },
+  { cat:"Appliances", name:"Radiator (panel)", price:12, kg:15 },
+  { cat:"Appliances", name:"Radiator (cast iron)", price:20, kg:40 },
+
+  // Bathroom
+  { cat:"Bathroom", name:"Toilet", price:25, kg:25 },
+  { cat:"Bathroom", name:"Sink", price:20, kg:15 },
+  { cat:"Bathroom", name:"Bathtub", price:35, kg:50 },
+  { cat:"Bathroom", name:"Shower Tray / Enclosure", price:30, kg:20 },
+  { cat:"Bathroom", name:"Bathroom Cabinet", price:20, kg:8 },
+  { cat:"Bathroom", name:"Towel Rail", price:10, kg:3 },
+  { cat:"Bathroom", name:"Bathroom Mirror", price:10, kg:5 },
+
+  // Soft Furnishings
+  { cat:"Soft Furnishings", name:"Carpet (per room)", price:25, kg:30 },
+  { cat:"Soft Furnishings", name:"Underlay (per room)", price:15, kg:10 },
+  { cat:"Soft Furnishings", name:"Cushions / Textiles (bundle)", price:8, kg:3 },
+  { cat:"Soft Furnishings", name:"Duvet / Bedding (bundle)", price:8, kg:3 },
+
+  // Office & Study
+  { cat:"Office & Study", name:"Desk (domestic)", price:30, kg:25 },
+  { cat:"Office & Study", name:"Desk (commercial)", price:40, kg:35 },
+  { cat:"Office & Study", name:"Office Chair (no fabric)", price:6, kg:10 },
+  { cat:"Office & Study", name:"Office Chair (fabric)", price:15, kg:12 },
+  { cat:"Office & Study", name:"Gaming Chair", price:35, kg:15 },
+  { cat:"Office & Study", name:"Bookcase (up to 60x200cm)", price:35, kg:25 },
+  { cat:"Office & Study", name:"Bookcase (up to 130x220cm)", price:47, kg:40 },
+  { cat:"Office & Study", name:"Filing Cabinet (2-drawer)", price:20, kg:25 },
+  { cat:"Office & Study", name:"Filing Cabinet (4-drawer)", price:30, kg:45 },
+  { cat:"Office & Study", name:"Shelving Unit", price:20, kg:20 },
+  { cat:"Office & Study", name:"Computer (no screen)", price:5, kg:8 },
+  { cat:"Office & Study", name:"Computer (with screen/monitor)", price:27, kg:15 },
+  { cat:"Office & Study", name:"Printer / Photocopier (large commercial)", price:40, kg:30 },
+  { cat:"Office & Study", name:"Projector Screen", price:12.50, kg:8 },
+  { cat:"Office & Study", name:"Large Stereo System and Speakers", price:9, kg:15 },
+
+  // Technology
+  { cat:"Technology", name:"TV (up to 20 inch)", price:22, kg:6 },
+  { cat:"Technology", name:"TV (up to 32 inch)", price:15, kg:8 },
+  { cat:"Technology", name:"TV (33-55 inch)", price:25, kg:15 },
+  { cat:"Technology", name:"TV (56 inch+)", price:35, kg:25 },
+  { cat:"Technology", name:"Speaker / Soundbar", price:10, kg:5 },
+  { cat:"Technology", name:"Stereo / Hi-Fi", price:15, kg:10 },
+  { cat:"Technology", name:"Laptop", price:10, kg:2 },
+  { cat:"Technology", name:"Monitor", price:10, kg:5 },
+  { cat:"Technology", name:"Games Console", price:5, kg:2 },
+  { cat:"Technology", name:"Printer (home/small office)", price:10, kg:6 },
+
+  // Instruments & Music
+  { cat:"Instruments & Music", name:"Keyboard (light electric piano)", price:5, kg:8 },
+  { cat:"Instruments & Music", name:"Electric Organ (up to 100kg)", price:95, kg:100 },
+  { cat:"Instruments & Music", name:"Upright Piano (call for larger sizes)", price:210, kg:250 },
+  { cat:"Instruments & Music", name:"Drum Kit", price:25, kg:25 },
+  { cat:"Instruments & Music", name:"Guitar", price:9, kg:4 },
+  { cat:"Instruments & Music", name:"Violin", price:5, kg:2 },
+  { cat:"Instruments & Music", name:"Cello", price:20, kg:5 },
+  { cat:"Instruments & Music", name:"Flute", price:4, kg:1 },
+  { cat:"Instruments & Music", name:"Piano Stool", price:6, kg:5 },
+
+  // Garden & DIY
+  { cat:"Garden & DIY", name:"Garden Sofa Set (3 items - plastic/light)", price:40, kg:35 },
+  { cat:"Garden & DIY", name:"Garden Table (4 seater)", price:20, kg:20 },
+  { cat:"Garden & DIY", name:"Garden Table (6 seater)", price:25, kg:30 },
+  { cat:"Garden & DIY", name:"Garden Chairs", price:5, kg:5 },
+  { cat:"Garden & DIY", name:"Garden Bench", price:25, kg:25 },
+  { cat:"Garden & DIY", name:"Picnic Bench", price:25, kg:30 },
+  { cat:"Garden & DIY", name:"Sun-lounger (garden loungers)", price:12, kg:8 },
+  { cat:"Garden & DIY", name:"Egg Chair (garden furniture)", price:25, kg:20 },
+  { cat:"Garden & DIY", name:"Parasol", price:5, kg:5 },
+  { cat:"Garden & DIY", name:"BBQ", price:20, kg:20 },
+  { cat:"Garden & DIY", name:"Chiminea", price:12.50, kg:15 },
+  { cat:"Garden & DIY", name:"Fire Pit (small & light)", price:7.50, kg:8 },
+  { cat:"Garden & DIY", name:"Fire Pit (large)", price:15, kg:20 },
+  { cat:"Garden & DIY", name:"Hot Tub (inflatable inc pump etc)", price:45, kg:30 },
+  { cat:"Garden & DIY", name:"Hot Tub (heavy solid - inc dismantling)", price:650, kg:350 },
+  { cat:"Garden & DIY", name:"Shed - Standard (up to 6x4ft - including dismantling)", price:300, kg:150 },
+  { cat:"Garden & DIY", name:"Shed - Large (up to 8x6ft - including dismantling)", price:320, kg:200 },
+  { cat:"Garden & DIY", name:"Shed - Extra Large (up to 10x8ft - including dismantling)", price:340, kg:250 },
+  { cat:"Garden & DIY", name:"Greenhouse (dismantled)", price:60, kg:80 },
+  { cat:"Garden & DIY", name:"Trampoline (up to 12ft)", price:40, kg:40 },
+  { cat:"Garden & DIY", name:"Trampoline (small gym type)", price:18.50, kg:20 },
+  { cat:"Garden & DIY", name:"Trampoline (up to 14ft - including dismantling)", price:48.50, kg:50 },
+  { cat:"Garden & DIY", name:"Swing-Set (children's garden swing)", price:17, kg:20 },
+  { cat:"Garden & DIY", name:"Slide (children's garden toy)", price:17.50, kg:12 },
+  { cat:"Garden & DIY", name:"Wendy House (standard plastic play house)", price:12, kg:15 },
+  { cat:"Garden & DIY", name:"Sand Pit (without sand)", price:5, kg:5 },
+  { cat:"Garden & DIY", name:"Lawnmower", price:7, kg:20 },
+  { cat:"Garden & DIY", name:"Strimmer / Leaf Blower", price:10, kg:5 },
+  { cat:"Garden & DIY", name:"Plant Pots (per 5)", price:10, kg:10 },
+  { cat:"Garden & DIY", name:"Garden Waste (bag)", price:10, kg:15 },
+  { cat:"Garden & DIY", name:"Water Butt", price:10, kg:8 },
+  { cat:"Garden & DIY", name:"Decking Boards (per 20kg)", price:20, kg:20 },
+  { cat:"Garden & DIY", name:"Fence Panels (per 20kg)", price:30, kg:20 },
+  { cat:"Garden & DIY", name:"Patio Slabs (per m2)", price:20, kg:40 },
+  { cat:"Garden & DIY", name:"Concrete / Rubble (bag)", price:15, kg:25 },
+  { cat:"Garden & DIY", name:"Soil / Turf (bag)", price:10, kg:20 },
+  { cat:"Garden & DIY", name:"Gate / Railing (section)", price:15, kg:20 },
+  { cat:"Garden & DIY", name:"Plasterboard (up to 5kg)", price:5, kg:5 },
+  { cat:"Garden & DIY", name:"Ladder (small)", price:7, kg:5 },
+  { cat:"Garden & DIY", name:"Ladder (large)", price:12, kg:10 },
+  { cat:"Garden & DIY", name:"Workbench (folding)", price:5.50, kg:8 },
+  { cat:"Garden & DIY", name:"Power Tools (drill, sander, saw etc - per item)", price:2.50, kg:3 },
+  { cat:"Garden & DIY", name:"Roof Box (car)", price:14, kg:15 },
+
+  // Sports & Leisure
+  { cat:"Sports & Leisure", name:"Snooker / Billiards Table (full size slate bed up to 12ft)", price:450, kg:400 },
+  { cat:"Sports & Leisure", name:"Pool / Snooker Table (small & light)", price:35, kg:60 },
+  { cat:"Sports & Leisure", name:"Golf Clubs (inc bag)", price:9, kg:10 },
+  { cat:"Sports & Leisure", name:"Exercise Bike", price:19, kg:25 },
+  { cat:"Sports & Leisure", name:"Cross Trainer", price:60, kg:50 },
+  { cat:"Sports & Leisure", name:"Treadmill", price:60, kg:80 },
+  { cat:"Sports & Leisure", name:"Rowing Machine", price:60, kg:35 },
+  { cat:"Sports & Leisure", name:"Exercise Equipment (small)", price:20, kg:15 },
+  { cat:"Sports & Leisure", name:"Exercise Equipment (large)", price:40, kg:50 },
+  { cat:"Sports & Leisure", name:"Bicycle or Tricycle", price:5, kg:12 },
+  { cat:"Sports & Leisure", name:"Scooter (2 wheel child-size)", price:4, kg:3 },
+  { cat:"Sports & Leisure", name:"Scooter (electric 2 wheel)", price:15, kg:12 },
+  { cat:"Sports & Leisure", name:"Ride on Toys (outdoor karts & electric cars)", price:24, kg:15 },
+
+  // Games & Toys
+  { cat:"Games & Toys", name:"Rocking Horse", price:12, kg:8 },
+  { cat:"Games & Toys", name:"Kids Toys (box)", price:8, kg:10 },
+
+  // Baby & Nursery
+  { cat:"Baby & Nursery", name:"Cot (no mattress)", price:25, kg:12 },
+  { cat:"Baby & Nursery", name:"Cot (with mattress)", price:45, kg:20 },
+  { cat:"Baby & Nursery", name:"Cot Mattress", price:10, kg:5 },
+  { cat:"Baby & Nursery", name:"Travel Cot / Playpen", price:14, kg:8 },
+  { cat:"Baby & Nursery", name:"Baby Changing Unit", price:35, kg:15 },
+  { cat:"Baby & Nursery", name:"High Chair (baby toddler)", price:9, kg:6 },
+  { cat:"Baby & Nursery", name:"Pram / Pushchair", price:15, kg:10 },
+  { cat:"Baby & Nursery", name:"Baby Bouncer / Rocker", price:8, kg:4 },
+  { cat:"Baby & Nursery", name:"Car Seat (baby & child)", price:9, kg:5 },
+  { cat:"Baby & Nursery", name:"Safety Gate (stair gate)", price:4, kg:2 },
+  { cat:"Baby & Nursery", name:"Bunk Bed Frame", price:55, kg:50 },
+  { cat:"Baby & Nursery", name:"Kids Wardrobe / Furniture", price:25, kg:30 },
+
+  // Pets
+  { cat:"Pets", name:"Dog Cage", price:9, kg:10 },
+  { cat:"Pets", name:"Dog Bed (large)", price:6, kg:5 },
+  { cat:"Pets", name:"Dog Bed (small-medium)", price:4, kg:3 },
+  { cat:"Pets", name:"Kennel / Dog Run", price:30, kg:25 },
+
+  // Mobility & Medical
+  { cat:"Mobility & Medical", name:"Wheelchair (non-motorised)", price:12, kg:15 },
+  { cat:"Mobility & Medical", name:"Wheelchair (motorised)", price:24, kg:40 },
+  { cat:"Mobility & Medical", name:"Mobility Scooter", price:30, kg:50 },
+  { cat:"Mobility & Medical", name:"Hospital Bed (without mattress)", price:65, kg:60 },
+  { cat:"Mobility & Medical", name:"Hospital Bed (with mattress)", price:95, kg:80 },
+  { cat:"Mobility & Medical", name:"Push Chair (stroller or pram)", price:12.50, kg:10 },
+
+  // Garage & Clearance
+  { cat:"Garage & Clearance", name:"Garage Contents (full clearance)", price:"Assess Photographs", kg:200 },
+  { cat:"Garage & Clearance", name:"Loft / Attic Contents (full clearance)", price:"Assess Photographs", kg:150 },
+  { cat:"Garage & Clearance", name:"Cellar / Basement Contents (full clearance)", price:"Assess Photographs", kg:150 },
+  { cat:"Garage & Clearance", name:"Shed Contents", price:"Assess Photographs", kg:20 },
+  { cat:"Garage & Clearance", name:"Tool Chest / Cabinet", price:25, kg:35 },
+  { cat:"Garage & Clearance", name:"Tyre (each)", price:8, kg:8 },
+  { cat:"Garage & Clearance", name:"Black Bin Bag (per bag, no food/feces)", price:3, kg:8 },
+  { cat:"Garage & Clearance", name:"Pallet (120x100x220cm)", price:4, kg:25 },
+  { cat:"Garage & Clearance", name:"Plastic Storage Tub / Box", price:5, kg:5 },
+  { cat:"Garage & Clearance", name:"Timber / Wood Offcuts (bundle)", price:10, kg:20 },
+  { cat:"Garage & Clearance", name:"Box (small)", price:5, kg:8 },
+  { cat:"Garage & Clearance", name:"Box (medium)", price:8, kg:15 },
+  { cat:"Garage & Clearance", name:"Box (large)", price:10, kg:20 },
+  { cat:"Garage & Clearance", name:"Books (per box)", price:8, kg:20 },
+  { cat:"Garage & Clearance", name:"General Clutter (per box)", price:8, kg:12 },
+  { cat:"Garage & Clearance", name:"Bag of Clothing / Textiles", price:5, kg:5 },
+  { cat:"Garage & Clearance", name:"Suitcase / Large Bag", price:5, kg:5 },
+  { cat:"Garage & Clearance", name:"Safe (small)", price:30, kg:40 },
+  { cat:"Garage & Clearance", name:"Internal Door", price:10, kg:20 },
+  { cat:"Garage & Clearance", name:"Paint Tins (per 5)", price:10, kg:15 },
+  { cat:"Garage & Clearance", name:"Picture Frame", price:5, kg:2 },
+  { cat:"Garage & Clearance", name:"Painting / Canvas", price:8, kg:3 },
+
+];
+
+let lines = [], nextId = 1;
+let activeTab = PRESETS[0].cat;
+
+
+function buildCats() {
+  const cats = [...new Set(PRESETS.map(i => i.cat))];
+  const el = document.getElementById('catScroll');
+  el.innerHTML = '';
+  cats.forEach(cat => {
+    const p = document.createElement('button');
+    p.className = 'cat-pill' + (cat === activeTab ? ' active' : '');
+    p.innerHTML = `<span class="pill-icon">${CAT_ICONS[cat]||'📋'}</span>${cat}`;
+    p.onclick = () => { activeTab = cat; buildCats(); renderItems(); };
+    el.appendChild(p);
+  });
+}
+
+function renderItems(filter = '') {
+  const list = document.getElementById('itemList');
+  const isSearch = filter.trim().length > 0;
+  const items = isSearch
+    ? PRESETS.filter(i => i.name.toLowerCase().includes(filter.toLowerCase()) || i.cat.toLowerCase().includes(filter.toLowerCase()))
+    : PRESETS.filter(i => i.cat === activeTab);
+  list.innerHTML = '';
+  if (!items.length) {
+    list.innerHTML = `<div class="empty-msg">No results for "${filter}"</div>`;
+    return;
+  }
+  items.forEach(item => {
+    const pl = typeof item.price === 'string' ? item.price : '£' + item.price.toFixed(2);
+    const c = document.createElement('div');
+    c.className = 'icard';
+    c.innerHTML = `
+      <div class="icard-name">${item.name}</div>
+      <span class="icard-kg">${item.kg}kg</span>
+      <span class="icard-price">${pl}</span>
+      <button class="icard-btn">+ Add</button>`;
+    c.querySelector('.icard-btn').onclick = e => { e.stopPropagation(); addItem(item.name, item.price, item.kg); };
+    c.onclick = () => addItem(item.name, item.price, item.kg);
+    list.appendChild(c);
+  });
+}
+
+function filterItems() { renderItems(document.getElementById('searchInput').value); }
+
+function addItem(name, price, kg) {
+  const np = typeof price === 'string' ? 0 : price;
+  const ex = lines.find(l => l.name === name);
+  if (ex) { ex.qty++; }
+  else { lines.push({ id: nextId++, name, price: np, priceLabel: typeof price === 'string' ? price : null, kg: kg||0, qty: 1 }); }
+  renderQuote();
+}
+
+function addCustomItem() {
+  const name = document.getElementById('customName').value.trim();
+  const price = parseFloat(document.getElementById('customPrice').value);
+  if (!name) return;
+  addItem(name, isNaN(price) ? 0 : price, 0);
+  document.getElementById('customName').value = '';
+  document.getElementById('customPrice').value = '';
+}
+
+document.getElementById('customName').addEventListener('keydown', e => { if (e.key === 'Enter') addCustomItem(); });
+document.getElementById('customPrice').addEventListener('keydown', e => { if (e.key === 'Enter') addCustomItem(); });
+
+function changeQty(id, d) {
+  const l = lines.find(l => l.id === id);
+  if (!l) return;
+  l.qty += d;
+  if (l.qty <= 0) lines = lines.filter(x => x.id !== id);
+  renderQuote();
+}
+function removeLine(id) { lines = lines.filter(l => l.id !== id); renderQuote(); }
+
+function renderQuote() {
+  const c = document.getElementById('quoteLines');
+  const count = lines.reduce((s,l) => s + l.qty, 0);
+  document.getElementById('quoteCount').textContent = count ? `${count} item${count!==1?'s':''}` : '0 items';
+  c.innerHTML = lines.map(l => `
+    <div class="ql">
+      <span class="ql-name">${l.name}</span>
+      <div class="ql-ctrl">
+        <button class="qb" onclick="changeQty(${l.id},-1)">−</button>
+        <span class="qv">${l.qty}</span>
+        <button class="qb" onclick="changeQty(${l.id},+1)">+</button>
+      </div>
+      <span class="ql-kg">${l.kg * l.qty}kg</span>
+      <span class="ql-amt">${l.priceLabel ? l.priceLabel : '£'+(l.price*l.qty).toFixed(2)}</span>
+      <button class="ql-del" onclick="removeLine(${l.id})">✕</button>
+    </div>`).join('');
+  const sub = lines.reduce((s,l) => s + l.price * l.qty, 0);
+  const vat = sub * 0.2;
+  const kg  = lines.reduce((s,l) => s + (l.kg||0) * l.qty, 0);
+  document.getElementById('subtotal').textContent    = `£${sub.toFixed(2)}`;
+  document.getElementById('vatAmt').textContent      = `£${vat.toFixed(2)}`;
+  document.getElementById('grandTotal').textContent  = `£${(sub+vat).toFixed(2)}`;
+  document.getElementById('totalWeight').textContent = `${kg} kg`;
+}
+
+buildCats();
+renderItems();
+renderQuote();
+
+// ── API KEY ──
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) localStorage.setItem('anthropic_api_key', key);
+  document.getElementById('settingsOverlay').classList.remove('visible');
+}
+
+// Load saved key on start
+(function() {
+  const saved = localStorage.getItem('anthropic_api_key');
+  if (saved) document.getElementById('apiKeyInput').value = saved;
+})();
+
+// ── PHOTO SCAN ──
+let scanItems = [];
+
+async function handlePhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+
+  // Show modal with preview
+  const overlay = document.getElementById('scanOverlay');
+  const preview = document.getElementById('scanPreview');
+  const imgWrap = document.getElementById('scanImgWrap');
+  overlay.classList.add('visible');
+  scanItems = [];
+  document.getElementById('scanResults').innerHTML = '';
+  document.getElementById('scanConfirm').disabled = true;
+  document.getElementById('scanError').style.display = 'none';
+  document.getElementById('scanSpinner').style.display = 'block';
+  document.getElementById('scanStatusTxt').textContent = 'Analysing your photo…';
+
+  // Show image preview
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    imgWrap.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+
+  // Convert to base64 for API
+  const b64 = await new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.readAsDataURL(file);
+  });
+
+  // Build preset context for matching
+  const presetNames = [...new Set(PRESETS.map(p => p.name))].join(', ');
+
+  try {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    if (!apiKey) {
+    document.getElementById('scanSpinner').style.display = 'none';
+    document.getElementById('scanStatusTxt').textContent = 'API key missing';
+    const errEl = document.getElementById('scanError');
+    errEl.style.display = 'block';
+    errEl.textContent = '⚙ No API key set — tap the ⚙ button in the header and enter your Anthropic API key first.';
+    return;
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: file.type, data: b64 }
+            },
+            {
+              type: 'text',
+              text: `You are helping quote a house clearance. Look at this photo and identify all items that would need to be cleared.
+
+Match each item you see to the closest item from this list where possible:
+${presetNames}
+
+Return ONLY a JSON array, no other text. Each object must have:
+- "name": exact name from the list above if matched, or a descriptive name if not matched
+- "matched": true if matched to list, false if custom
+- "qty": estimated quantity (integer)
+- "notes": brief note e.g. "good condition", "stained", "heavy"
+
+Example: [{"name":"Sofa (3-seater)","matched":true,"qty":1,"notes":"fabric, good condition"},{"name":"Coffee Table","matched":true,"qty":1,"notes":"glass top"}]
+
+Only include items that clearly need clearing. Be conservative - only include what you can clearly see.`
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '[]';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const detected = JSON.parse(clean);
+
+    document.getElementById('scanSpinner').style.display = 'none';
+    document.getElementById('scanStatusTxt').textContent = `Found ${detected.length} item${detected.length !== 1 ? 's' : ''} — select to add`;
+
+    scanItems = detected.map((d, i) => {
+      // Try to find matching preset
+      const preset = PRESETS.find(p => p.name === d.name);
+      return {
+        id: i,
+        name: d.name,
+        notes: d.notes,
+        qty: d.qty || 1,
+        price: preset ? preset.price : 0,
+        kg: preset ? preset.kg : 0,
+        matched: d.matched && !!preset,
+        checked: true
+      };
+    });
+
+    renderScanResults();
+    document.getElementById('scanConfirm').disabled = false;
+
+  } catch(err) {
+    document.getElementById('scanSpinner').style.display = 'none';
+    document.getElementById('scanStatusTxt').textContent = 'Analysis failed';
+    const errEl = document.getElementById('scanError');
+    errEl.style.display = 'block';
+    errEl.textContent = 'Error: ' + (err.message || JSON.stringify(err));
+    console.error(err);
+  }
+}
+
+function renderScanResults() {
+  const el = document.getElementById('scanResults');
+  el.innerHTML = scanItems.map(item => {
+    const pl = typeof item.price === 'string' ? item.price : item.price > 0 ? '£' + item.price.toFixed(2) : 'Custom';
+    return `<div class="scan-item">
+      <div class="scan-item-check ${item.checked ? 'checked' : ''}" onclick="toggleScanItem(${item.id})"></div>
+      <div class="scan-item-info">
+        <div class="scan-item-name">${item.qty > 1 ? item.qty + '× ' : ''}${item.name}</div>
+        <div class="scan-item-meta">${item.notes}${!item.matched ? ' · custom item' : ''}</div>
+      </div>
+      <span class="scan-item-price">${pl}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleScanItem(id) {
+  const item = scanItems.find(i => i.id === id);
+  if (item) { item.checked = !item.checked; renderScanResults(); }
+}
+
+function confirmScan() {
+  scanItems.filter(i => i.checked).forEach(item => {
+    for (let q = 0; q < item.qty; q++) {
+      addItem(item.name, item.price, item.kg);
+    }
+  });
+  closeScan();
+}
+
+function closeScan() {
+  document.getElementById('scanOverlay').classList.remove('visible');
+  document.getElementById('scanImgWrap').style.display = 'none';
+  scanItems = [];
+}
+</script>
+</body>
+</html>
