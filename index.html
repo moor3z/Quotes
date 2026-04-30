@@ -469,6 +469,14 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
         <span class="grand-lbl">Total inc. VAT</span>
         <span class="grand-val" id="grandTotal">£0.00</span>
       </div>
+      <div id="loadRec" style="display:none;margin-top:14px;background:rgba(0,183,235,0.08);border:1px solid rgba(0,183,235,0.25);border-radius:var(--radius-sm);padding:12px 14px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text2);margin-bottom:6px">Recommended Load</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span id="loadName" style="font-size:14px;font-weight:700;color:var(--text)"></span>
+          <span id="loadPrice" style="font-size:16px;font-weight:700;color:var(--accent)"></span>
+        </div>
+        <div id="loadDesc" style="font-size:11px;color:var(--text2);margin-top:3px"></div>
+      </div>
     </div>
 
   </div>
@@ -958,6 +966,34 @@ function renderQuote() {
   document.getElementById('vatAmt').textContent      = `£${vat.toFixed(2)}`;
   document.getElementById('grandTotal').textContent  = `£${(sub+vat).toFixed(2)}`;
   document.getElementById('totalWeight').textContent = `${kg} kg`;
+  updateLoadRec(kg);
+}
+
+const LOADS = [
+  { name:'Mini Load',    maxKg:75,   price:'£99.99 inc VAT',  desc:'~75kg · 6-7 bin bags · 1 cubic yard' },
+  { name:'Small Load',   maxKg:150,  price:'£149.99 inc VAT', desc:'~150kg · 12-14 bin bags · 2 cubic yards' },
+  { name:'Medium Load',  maxKg:300,  price:'£199.99 inc VAT', desc:'~300kg · 24-28 bin bags · 4 cubic yards' },
+  { name:'Large Load',   maxKg:450,  price:'£269.99 inc VAT', desc:'~450kg · 36-42 bin bags · 6 cubic yards' },
+  { name:'Large Plus',   maxKg:600,  price:'£349.99 inc VAT', desc:'~600kg · 48-56 bin bags · 8 cubic yards' },
+  { name:'X Large Load', maxKg:750,  price:'£399.99 inc VAT', desc:'~750kg · 60-70 bin bags · 10 cubic yards' },
+  { name:'X Large Plus', maxKg:900,  price:'£449.99 inc VAT', desc:'~900kg · 72-84 bin bags · 12 cubic yards' },
+  { name:'XX Large Load',maxKg:1000, price:'£499.99 inc VAT', desc:'~1000kg · 84-98 bin bags · 14 cubic yards' },
+  { name:'26 Cubic Yard Luton',maxKg:1200,price:'£699.99 inc VAT',desc:'~1200kg · Full Luton load · 26 cubic yards' },
+];
+
+function updateLoadRec(kg) {
+  const el = document.getElementById('loadRec');
+  if (kg <= 0) { el.style.display = 'none'; return; }
+  const load = LOADS.find(l => kg <= l.maxKg) || LOADS[LOADS.length - 1];
+  const nearLimit = kg >= load.maxKg * 0.85;
+  const nextLoad = LOADS[LOADS.indexOf(load) + 1];
+  document.getElementById('loadName').textContent = load.name;
+  document.getElementById('loadPrice').textContent = load.price;
+  const warn = nearLimit && nextLoad ? ` · Near limit — consider ${nextLoad.name} (${nextLoad.price})` : '';
+  document.getElementById('loadDesc').textContent = load.desc + warn;
+  document.getElementById('loadRec').style.borderColor = nearLimit ? 'rgba(251,146,60,0.5)' : 'rgba(0,183,235,0.25)';
+  document.getElementById('loadRec').style.background = nearLimit ? 'rgba(251,146,60,0.08)' : 'rgba(0,183,235,0.08)';
+  el.style.display = 'block';
 }
 
 const SAVED_KEY = '';
@@ -1031,16 +1067,6 @@ async function handlePhoto(event) {
   const presetNames = [...new Set(PRESETS.map(p => p.name))].join(', ');
 
   try {
-    const apiKey = document.getElementById('apiKeyInput').value.trim();
-    if (!apiKey) {
-    document.getElementById('scanSpinner').style.display = 'none';
-    document.getElementById('scanStatusTxt').textContent = 'API key missing';
-    const errEl = document.getElementById('scanError');
-    errEl.style.display = 'block';
-    errEl.textContent = '⚙ No API key set — tap the ⚙ button in the header and enter your Anthropic API key first.';
-    return;
-    }
-
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
     const response = await fetch('https://anthropic-proxy.steven-d3e.workers.dev', {
