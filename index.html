@@ -1106,53 +1106,83 @@ async function handlePhoto(event) {
   });
 
   // Build preset context for matching
-  const presetNames = [...new Set(PRESETS.map(p => p.name))].join(', ');
+  const presetNames = [...new Set(PRESETS.map(p => p.name))].join('\n');
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
-    const response = await fetch('https://anthropic-proxy.steven-d3e.workers.dev', {
-      signal: controller.signal,
+    // PASS 1 — identify what's in the photo
+    document.getElementById('scanStatusTxt').textContent = 'Pass 1: Identifying items…';
+    const ctrl1 = new AbortController();
+    const t1 = setTimeout(() => ctrl1.abort(), 30000);
+    const resp1 = await fetch('https://anthropic-proxy.steven-d3e.workers.dev', {
+      signal: ctrl1.signal,
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01'
-      },
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 1000,
         messages: [{
           role: 'user',
           content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: 'image/jpeg', data: b64 }
-            },
-            {
-              type: 'text',
-              text: `You are helping quote a house clearance. Look at this photo and identify all items that would need to be cleared.
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
+            { type: 'text', text: `You are surveying a property for a house clearance company. Look carefully at this photo and list every single item you can see that would need to be removed — furniture, appliances, electronics, equipment, boxes, bags, garden items, anything.
 
-Match each item you see to the closest item from this list where possible:
-${presetNames}
+Be thorough. Include items that are:
+- Partially visible or in the background
+- Stacked or piled up
+- In poor condition
+- Multiple of the same item
 
-Return ONLY a JSON array, no other text. Each object must have:
-- "name": exact name from the list above if matched, or a descriptive name if not matched
-- "matched": true if matched to list, false if custom
-- "qty": estimated quantity (integer)
-- "notes": brief note e.g. "good condition", "stained", "heavy"
+Return ONLY a JSON array of objects with:
+- "item": descriptive name of what you see (e.g. "large fabric 3-seater sofa", "double mattress leaning against wall")
+- "qty": how many you can see (integer)
+- "condition": one word — good / fair / poor
+- "notes": any useful detail (size, material, location in room)
 
-Example: [{"name":"Sofa (3-seater)","matched":true,"qty":1,"notes":"fabric, good condition"},{"name":"Coffee Table","matched":true,"qty":1,"notes":"glass top"}]
-
-Include any items you can see that might need clearing, even if partially visible. Be generous - it is better to include too many items than too few. If you can see any furniture, appliances, or household items, include them.`
-            }
+Example: [{"item":"large grey fabric corner sofa","qty":1,"condition":"fair","notes":"L-shaped, left hand facing"},{"item":"flat screen TV","qty":1,"condition":"good","notes":"approx 50 inch, wall mounted"}]` }
           ]
         }]
       })
     });
+    clearTimeout(t1);
+    const d1 = await resp1.json();
+    const raw1 = d1.content?.find(b => b.type === 'text')?.text || '[]';
+    const seen = JSON.parse(raw1.replace(/```json|```/g, '').trim());
 
-    clearTimeout(timeout);
-    const data = await response.json();
-    const text = data.content?.find(b => b.type === 'text')?.text || '[]';
+    // PASS 2 — match to price list
+    document.getElementById('scanStatusTxt').textContent = 'Pass 2: Matching to price list…';
+    const ctrl2 = new AbortController();
+    const t2 = setTimeout(() => ctrl2.abort(), 30000);
+    const resp2 = await fetch('https://anthropic-proxy.steven-d3e.workers.dev', {
+      signal: ctrl2.signal,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: [{ type: 'text', text: `You are helping build a house clearance quote. Match each identified item to the closest item in our price list.
+
+IDENTIFIED ITEMS:
+${JSON.stringify(seen, null, 2)}
+
+OUR PRICE LIST (match to these exact names where possible):
+${presetNames}
+
+Return ONLY a JSON array. Each object must have:
+- "name": exact name from price list if matched, otherwise a clear descriptive name
+- "matched": true if it matches a price list item exactly, false if not
+- "qty": quantity (integer)
+- "notes": condition and any useful notes
+- "estimatedPrice": a number (no currency symbol). If matched to price list, use 0 (we will look it up). If NOT matched, estimate a fair UK house clearance price in GBP based on the item's size, weight, and effort to remove. Small lightweight items (cups, ornaments) = 2-5. Medium items (lamps, small boxes) = 5-15. Large or heavy items (unlisted furniture, equipment) = 20-60. Be reasonable.
+
+Match as closely as possible. If an item could be multiple things, pick the most likely match. Include every item identified.` }]
+        }]
+      })
+    });
+    clearTimeout(t2);
+    const d2 = await resp2.json();
+    const text = d2.content?.find(b => b.type === 'text')?.text || '[]';
     const clean = text.replace(/```json|```/g, '').trim();
     const detected = JSON.parse(clean);
 
@@ -1160,16 +1190,18 @@ Include any items you can see that might need clearing, even if partially visibl
     document.getElementById('scanStatusTxt').textContent = `Found ${detected.length} item${detected.length !== 1 ? 's' : ''} — select to add`;
 
     scanItems = detected.map((d, i) => {
-      // Try to find matching preset
       const preset = PRESETS.find(p => p.name === d.name);
+      const isMatched = d.matched && !!preset;
+      const price = isMatched ? preset.price : (d.estimatedPrice || 5);
       return {
         id: i,
         name: d.name,
         notes: d.notes,
         qty: d.qty || 1,
-        price: preset ? preset.price : 0,
+        price: price,
         kg: preset ? preset.kg : 0,
-        matched: d.matched && !!preset,
+        matched: isMatched,
+        estimated: !isMatched,
         checked: true
       };
     });
