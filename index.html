@@ -94,10 +94,40 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 .search-input::placeholder { color: var(--text3); }
 
 /* Category pills */
-.cat-scroll {
+.cat-scroll-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+.cat-arrow {
   flex-shrink: 0;
+  width: 32px;
+  min-height: 44px;
+  background: var(--surface);
+  border: none;
+  color: var(--text2);
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+  padding: 0;
+  line-height: 1;
+  z-index: 1;
+}
+.cat-arrow:hover { color: var(--accent); }
+.cat-arrow-l { border-right: 1px solid var(--border); }
+.cat-arrow-r { border-left: 1px solid var(--border); }
+.cat-scroll {
+  flex: 1;
+  min-width: 0;
   display: flex; gap: 6px;
-  overflow-x: auto; padding: 0 16px 12px;
+  overflow-x: auto; padding: 8px 10px;
   background: var(--surface);
   scrollbar-width: none;
 }
@@ -432,7 +462,11 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
       </div>
     </div>
 
-    <div class="cat-scroll" id="catScroll"></div>
+    <div class="cat-scroll-wrap">
+      <button class="cat-arrow cat-arrow-l" id="catArrowL" onclick="scrollCats(-1)">&#8249;</button>
+      <div class="cat-scroll" id="catScroll"></div>
+      <button class="cat-arrow cat-arrow-r" id="catArrowR" onclick="scrollCats(1)">&#8250;</button>
+    </div>
 
     <div class="grid-wrap">
       <div class="items-grid" id="itemList"></div>
@@ -599,9 +633,8 @@ const PRESETS = [
   { cat:"Lounge", name:"Sofa Bed (double/2 seater - with mattress)", price:75, kg:85 },
   { cat:"Lounge", name:"Sofa Bed (L-shape or 3/4 seater - no mattress)", price:95, kg:100 },
   { cat:"Lounge", name:"Sofa Bed (L-shape or 3/4 seater - with mattress)", price:105, kg:120 },
-  { cat:"Lounge", name:"Footstool (sofa pouffe)", price:12, kg:8 },
-  { cat:"Lounge", name:"Rocking Chair (no fabric)", price:14, kg:10 },
-  { cat:"Lounge", name:"Rocking Chair (fabric)", price:29, kg:12 },
+  { cat:"Lounge", name:"Footstool", price:12, kg:8 },
+  { cat:"Lounge", name:"Rocking Chair", price:20, kg:11 },
   { cat:"Lounge", name:"Coffee Table (small)", price:12, kg:12 },
   { cat:"Lounge", name:"Coffee Table", price:20, kg:20 },
   { cat:"Lounge", name:"Side Table", price:9, kg:10 },
@@ -631,7 +664,7 @@ const PRESETS = [
   { cat:"Bedroom", name:"Single Bed Frame", price:30, kg:20 },
   { cat:"Bedroom", name:"Double Bed Frame", price:40, kg:30 },
   { cat:"Bedroom", name:"King Bed Frame", price:50, kg:40 },
-  { cat:"Bedroom", name:"Bed Frame (bunk)", price:55, kg:50 },
+  { cat:"Bedroom", name:"Bunk Bed Frame", price:55, kg:50 },
   { cat:"Bedroom", name:"Single Mattress", price:25, kg:15 },
   { cat:"Bedroom", name:"Double Mattress", price:40, kg:30 },
   { cat:"Bedroom", name:"King Mattress", price:50, kg:35 },
@@ -648,7 +681,6 @@ const PRESETS = [
   { cat:"Bedroom", name:"Curtains (per pair)", price:10, kg:3 },
   { cat:"Bedroom", name:"Blind (per blind)", price:8, kg:2 },
   { cat:"Bedroom", name:"Dehumidifier (up to 15kg)", price:40, kg:15 },
-  { cat:"Bedroom", name:"Air Conditioning Unit", price:80, kg:25 },
   { cat:"Bedroom", name:"Trouser Press", price:9, kg:5 },
 
   // Kitchen & Dining
@@ -660,7 +692,6 @@ const PRESETS = [
   { cat:"Kitchen & Dining", name:"Dining Table (8 person, glass or marble top)", price:70, kg:100 },
   { cat:"Kitchen & Dining", name:"Dining Chair (no fabric)", price:5, kg:5 },
   { cat:"Kitchen & Dining", name:"Dining Chair (with fabric)", price:9, kg:7 },
-  { cat:"Kitchen & Dining", name:"High Chair (baby toddler)", price:9, kg:6 },
   { cat:"Kitchen & Dining", name:"Kitchen Unit / Cupboard", price:20, kg:25 },
   { cat:"Kitchen & Dining", name:"Larder Cupboard", price:40, kg:35 },
   { cat:"Kitchen & Dining", name:"Stool (small, no fabric)", price:5, kg:4 },
@@ -677,10 +708,11 @@ const PRESETS = [
   { cat:"Fridges & Freezers", name:"Fridge-Freezer (tall)", price:80, kg:65 },
   { cat:"Fridges & Freezers", name:"Chest Freezer (up to 60cm wide)", price:60, kg:50 },
   { cat:"Fridges & Freezers", name:"Chest Freezer (up to 120cm wide)", price:80, kg:75 },
-  { cat:"Fridges & Freezers", name:"Fridge Freezer (American style)", price:120, kg:100 },
+  { cat:"Fridges & Freezers", name:"American Fridge Freezer", price:120, kg:100 },
   { cat:"Fridges & Freezers", name:"Commercial Fridge / Freezer (glass front or other refrigerants)", price:250, kg:150 },
 
   // Appliances
+  { cat:"Appliances", name:"Air Conditioning Unit", price:80, kg:25 },
   { cat:"Appliances", name:"Dishwasher (domestic)", price:35, kg:45 },
   { cat:"Appliances", name:"Washing Machine (domestic)", price:35, kg:70 },
   { cat:"Appliances", name:"Tumble Dryer (domestic)", price:30, kg:35 },
@@ -716,17 +748,17 @@ const PRESETS = [
   { cat:"Office & Study", name:"Filing Cabinet (2-drawer)", price:20, kg:25 },
   { cat:"Office & Study", name:"Filing Cabinet (4-drawer)", price:30, kg:45 },
   { cat:"Office & Study", name:"Shelving Unit", price:20, kg:20 },
-  { cat:"Office & Study", name:"Computer (no screen)", price:5, kg:8 },
-  { cat:"Office & Study", name:"Computer (with screen/monitor)", price:27, kg:15 },
+  { cat:"Office & Study", name:"Desktop PC (tower only)", price:5, kg:8 },
+  { cat:"Office & Study", name:"Desktop PC (with monitor)", price:27, kg:15 },
   { cat:"Office & Study", name:"Printer / Photocopier (large commercial)", price:40, kg:30 },
   { cat:"Office & Study", name:"Projector Screen", price:12.50, kg:8 },
 
   // Technology
   { cat:"Technology", name:"Speaker / Soundbar", price:10, kg:5 },
   { cat:"Technology", name:"Stereo / Hi-Fi", price:15, kg:10 },
-  { cat:"Technology", name:"Laptop", price:10, kg:2 },
+  { cat:"Technology", name:"Laptop", price:8, kg:2 },
   { cat:"Technology", name:"Monitor", price:10, kg:5 },
-  { cat:"Technology", name:"Games Console", price:5, kg:2 },
+  { cat:"Technology", name:"Games Console", price:8, kg:2 },
   { cat:"Technology", name:"Printer (home/small office)", price:10, kg:6 },
 
   // Instruments & Music
@@ -809,14 +841,18 @@ const PRESETS = [
   { cat:"Sports & Leisure", name:"Scooter (2 wheel child-size)", price:4, kg:3 },
   { cat:"Sports & Leisure", name:"Scooter (electric 2 wheel)", price:15, kg:12 },
   { cat:"Sports & Leisure", name:"Ride on Toys (outdoor karts & electric cars)", price:24, kg:15 },
+  { cat:"Sports & Leisure", name:"Electric Scooter / E-Scooter", price:20, kg:15 },
+  { cat:"Sports & Leisure", name:"Electric Bike (e-bike)", price:25, kg:25 },
+  { cat:"Sports & Leisure", name:"Kayak / Canoe", price:25, kg:20 },
+  { cat:"Sports & Leisure", name:"Paddleboard (SUP)", price:20, kg:12 },
+  { cat:"Sports & Leisure", name:"Weight Bench", price:25, kg:30 },
 
   // Games & Toys
   { cat:"Games & Toys", name:"Rocking Horse", price:12, kg:8 },
   { cat:"Games & Toys", name:"Kids Toys (box)", price:8, kg:10 },
 
   // Baby & Nursery
-  { cat:"Baby & Nursery", name:"Cot (no mattress)", price:25, kg:12 },
-  { cat:"Baby & Nursery", name:"Cot (with mattress)", price:45, kg:20 },
+  { cat:"Baby & Nursery", name:"Cot", price:25, kg:12 },
   { cat:"Baby & Nursery", name:"Cot Mattress", price:10, kg:5 },
   { cat:"Baby & Nursery", name:"Travel Cot / Playpen", price:14, kg:8 },
   { cat:"Baby & Nursery", name:"Baby Changing Unit", price:35, kg:15 },
@@ -826,10 +862,12 @@ const PRESETS = [
   { cat:"Baby & Nursery", name:"Kids Wardrobe / Furniture", price:25, kg:30 },
 
   // Pets
-  { cat:"Pets", name:"Dog Cage", price:9, kg:10 },
-  { cat:"Pets", name:"Dog Bed (large)", price:6, kg:5 },
-  { cat:"Pets", name:"Dog Bed (small-medium)", price:4, kg:3 },
-  { cat:"Pets", name:"Kennel / Dog Run", price:30, kg:25 },
+  { cat:"Pet Accessories", name:"Dog Cage", price:9, kg:10 },
+  { cat:"Pet Accessories", name:"Dog Bed (large)", price:6, kg:5 },
+  { cat:"Pet Accessories", name:"Dog Bed (small-medium)", price:4, kg:3 },
+  { cat:"Pet Accessories", name:"Kennel / Dog Run", price:30, kg:25 },
+  { cat:"Pet Accessories", name:"Cat / Rabbit Hutch (small)", price:10, kg:8 },
+  { cat:"Pet Accessories", name:"Cat / Rabbit Hutch (large)", price:20, kg:15 },
 
   // Mobility & Medical
   { cat:"Mobility & Medical", name:"Wheelchair (non-motorised)", price:12, kg:15 },
@@ -837,7 +875,7 @@ const PRESETS = [
   { cat:"Mobility & Medical", name:"Mobility Scooter", price:30, kg:50 },
   { cat:"Mobility & Medical", name:"Hospital Bed (without mattress)", price:65, kg:60 },
   { cat:"Mobility & Medical", name:"Hospital Bed (with mattress)", price:95, kg:80 },
-  { cat:"Mobility & Medical", name:"Push Chair (stroller or pram)", price:12.50, kg:10 },
+  { cat:"Baby & Nursery", name:"Push Chair / Pram / Stroller", price:12.50, kg:10 },
 
   // Garage & Clearance
   { cat:"Garage & Clearance", name:"Collection Fee", price:25, kg:0 },
@@ -855,6 +893,7 @@ const PRESETS = [
   { cat:"Garage & Clearance", name:"Box (medium)", price:8, kg:15 },
   { cat:"Garage & Clearance", name:"Box (large)", price:10, kg:20 },
   { cat:"Garage & Clearance", name:"Books (per box)", price:8, kg:20 },
+  { cat:"Garage & Clearance", name:"Archive / Filing Box", price:5, kg:10 },
   { cat:"Garage & Clearance", name:"General Clutter (per box)", price:8, kg:12 },
   { cat:"Garage & Clearance", name:"Bag of Clothing / Textiles", price:5, kg:5 },
   { cat:"Garage & Clearance", name:"Suitcase / Large Bag", price:5, kg:5 },
@@ -869,6 +908,11 @@ const PRESETS = [
 let lines = [], nextId = 1;
 let activeTab = PRESETS[0].cat;
 
+
+function scrollCats(dir) {
+  const el = document.getElementById('catScroll');
+  el.scrollBy({ left: dir * 200, behavior: 'smooth' });
+}
 
 function buildCats() {
   const cats = [...new Set(PRESETS.map(i => i.cat))];
