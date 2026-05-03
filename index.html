@@ -345,7 +345,17 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 @keyframes spin { to { transform: rotate(360deg); } }
 .scan-status-txt { font-size: 14px; font-weight: 500; color: var(--text2); }
 
-.scan-results { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; }
+.scan-results { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; }
+.scan-progress-wrap { display: flex; align-items: center; gap: 10px; margin: 4px 0 10px; }
+.scan-progress-bar { flex: 1; height: 4px; background: var(--border2); border-radius: 4px; overflow: hidden; position: relative; }
+.scan-progress-bar::after { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: var(--pct, 0%); background: var(--accent); border-radius: 4px; transition: width 0.3s ease; }
+.scan-progress-txt { font-size: 11px; color: var(--text2); white-space: nowrap; flex-shrink: 0; }
+.scan-actions { display: flex; gap: 8px; margin-top: 10px; }
+.scan-add-more { flex: 1; background: var(--card2); border: 1px solid var(--border2); color: var(--text2); font-size: 12px; font-weight: 600; border-radius: var(--radius-sm); padding: 8px; cursor: pointer; transition: all 0.15s; }
+.scan-add-more:hover { border-color: var(--accent); color: var(--accent); }
+.scan-item-price-btn { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); flex-shrink: 0; background: none; border: none; cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: background 0.15s; }
+.scan-item-price-btn:hover { background: var(--accent-soft); }
+.scan-item-price-edit { width: 70px; font-family: var(--mono); font-size: 13px; background: var(--card2); border: 1px solid var(--accent); border-radius: 4px; color: var(--text); padding: 3px 6px; outline: none; }
 
 .scan-item {
   display: flex; align-items: center; gap: 10px;
@@ -435,7 +445,6 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
     <span class="hdr-logo-txt" style="display:none;">Tidy Up <em>Ltd</em></span>
   </div>
   <div class="hdr-right">
-    <button class="hdr-photo" onclick="document.getElementById('settingsOverlay').classList.add('visible')" title="Settings" style="padding:8px 12px;">⚙</button>
     <button class="hdr-photo" onclick="document.getElementById('photoCam').click()" title="Take a photo">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       Camera
@@ -445,7 +454,7 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
       Gallery
     </button>
     <input type="file" id="photoCam" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
-    <input type="file" id="photoGal" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+    <input type="file" id="photoGal" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
   </div>
 </header>
 
@@ -552,8 +561,16 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
         <div class="scan-spinner" id="scanSpinner"></div>
         <span class="scan-status-txt" id="scanStatusTxt">Analysing your photo…</span>
       </div>
+      <div class="scan-progress-wrap" id="scanProgressWrap" style="display:none">
+        <div class="scan-progress-bar" id="scanProgressBar"></div>
+        <span class="scan-progress-txt" id="scanProgressTxt"></span>
+      </div>
       <div class="scan-results" id="scanResults"></div>
       <div class="scan-error" id="scanError" style="display:none"></div>
+      <div class="scan-actions" id="scanActions" style="display:none">
+        <button class="scan-add-more" onclick="document.getElementById('photoGal').click()">+ Add more photos</button>
+        <button class="scan-add-more" onclick="document.getElementById('photoCam').click()">📷 Retake</button>
+      </div>
     </div>
     <div class="scan-footer">
       <button class="scan-cancel" onclick="closeScan()">Cancel</button>
@@ -1060,30 +1077,68 @@ function saveApiKey() {
 // ── PHOTO SCAN ──
 let scanItems = [];
 
-async function handlePhoto(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+async function handlePhotos(event) {
+  const files = [...event.target.files];
   event.target.value = '';
+  if (!files.length) return;
+  if (files.length === 1) { await handlePhoto(null, files[0]); return; }
 
-  // Show modal with preview
+  // Multiple photos — process each and combine results
   const overlay = document.getElementById('scanOverlay');
-  const preview = document.getElementById('scanPreview');
-  const imgWrap = document.getElementById('scanImgWrap');
   overlay.classList.add('visible');
   scanItems = [];
   document.getElementById('scanResults').innerHTML = '';
   document.getElementById('scanConfirm').disabled = true;
   document.getElementById('scanError').style.display = 'none';
-  document.getElementById('scanSpinner').style.display = 'block';
-  document.getElementById('scanStatusTxt').textContent = 'Analysing your photo…';
+  document.getElementById('scanImgWrap').style.display = 'none';
 
-  // Show image preview
-  const reader = new FileReader();
-  reader.onload = e => {
-    preview.src = e.target.result;
-    imgWrap.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
+  const progWrap = document.getElementById('scanProgressWrap');
+  const progBar = document.getElementById('scanProgressBar');
+  const progTxt = document.getElementById('scanProgressTxt');
+  progWrap.style.display = 'flex';
+
+  for (let i = 0; i < files.length; i++) {
+    const pct = Math.round((i / files.length) * 100);
+    progBar.style.setProperty('--pct', pct + '%');
+    progTxt.textContent = `${i + 1} / ${files.length}`;
+    document.getElementById('scanSpinner').style.display = 'block';
+    document.getElementById('scanStatusTxt').textContent = `Analysing photo ${i + 1} of ${files.length}…`;
+    await handlePhoto(null, files[i], true);
+  }
+
+  progBar.style.setProperty('--pct', '100%');
+  progTxt.textContent = `${files.length} / ${files.length}`;
+  document.getElementById('scanSpinner').style.display = 'none';
+  document.getElementById('scanStatusTxt').textContent = `Found ${scanItems.length} item${scanItems.length !== 1 ? 's' : ''} across ${files.length} photos — select to add`;
+  renderScanResults();
+  document.getElementById('scanConfirm').disabled = scanItems.length === 0;
+  document.getElementById('scanActions').style.display = 'flex';
+}
+
+async function handlePhoto(event, fileArg, multiMode) {
+  const file = fileArg || (event && event.target.files[0]);
+  if (!file) return;
+  if (event && !multiMode) event.target.value = '';
+
+  // Show modal with preview
+  const overlay = document.getElementById('scanOverlay');
+  const preview = document.getElementById('scanPreview');
+  const imgWrap = document.getElementById('scanImgWrap');
+
+  if (!multiMode) {
+    overlay.classList.add('visible');
+    scanItems = [];
+    document.getElementById('scanResults').innerHTML = '';
+    document.getElementById('scanConfirm').disabled = true;
+    document.getElementById('scanError').style.display = 'none';
+    document.getElementById('scanSpinner').style.display = 'block';
+    document.getElementById('scanStatusTxt').textContent = 'Analysing your photo…';
+
+    // Show image preview for single photo
+    const reader = new FileReader();
+    reader.onload = e => { preview.src = e.target.result; imgWrap.style.display = 'block'; };
+    reader.readAsDataURL(file);
+  }
 
   // Compress + convert to base64 for API
   const b64 = await new Promise(res => {
@@ -1186,15 +1241,12 @@ Match as closely as possible. If an item could be multiple things, pick the most
     const clean = text.replace(/```json|```/g, '').trim();
     const detected = JSON.parse(clean);
 
-    document.getElementById('scanSpinner').style.display = 'none';
-    document.getElementById('scanStatusTxt').textContent = `Found ${detected.length} item${detected.length !== 1 ? 's' : ''} — select to add`;
-
-    scanItems = detected.map((d, i) => {
+    const newItems = detected.map((d, i) => {
       const preset = PRESETS.find(p => p.name === d.name);
       const isMatched = d.matched && !!preset;
       const price = isMatched ? preset.price : (d.estimatedPrice || 5);
       return {
-        id: i,
+        id: scanItems.length + i,
         name: d.name,
         notes: d.notes,
         qty: d.qty || 1,
@@ -1206,8 +1258,15 @@ Match as closely as possible. If an item could be multiple things, pick the most
       };
     });
 
-    renderScanResults();
-    document.getElementById('scanConfirm').disabled = false;
+    scanItems = [...scanItems, ...newItems];
+
+    if (!multiMode) {
+      document.getElementById('scanSpinner').style.display = 'none';
+      document.getElementById('scanStatusTxt').textContent = `Found ${scanItems.length} item${scanItems.length !== 1 ? 's' : ''} — select to add`;
+      renderScanResults();
+      document.getElementById('scanConfirm').disabled = false;
+      document.getElementById('scanActions').style.display = 'flex';
+    }
 
   } catch(err) {
     document.getElementById('scanSpinner').style.display = 'none';
@@ -1222,16 +1281,38 @@ Match as closely as possible. If an item could be multiple things, pick the most
 function renderScanResults() {
   const el = document.getElementById('scanResults');
   el.innerHTML = scanItems.map(item => {
-    const pl = typeof item.price === 'string' ? item.price : item.price > 0 ? '£' + item.price.toFixed(2) : 'Custom';
+    const pl = typeof item.price === 'string' ? item.price : '£' + (item.price || 0).toFixed(2);
+    const estimated = item.estimated ? ' · estimated' : '';
     return `<div class="scan-item">
       <div class="scan-item-check ${item.checked ? 'checked' : ''}" onclick="toggleScanItem(${item.id})"></div>
       <div class="scan-item-info">
         <div class="scan-item-name">${item.qty > 1 ? item.qty + '× ' : ''}${item.name}</div>
-        <div class="scan-item-meta">${item.notes}${!item.matched ? ' · custom item' : ''}</div>
+        <div class="scan-item-meta">${item.notes || ''}${!item.matched ? ' · custom' : ''}${estimated}</div>
       </div>
-      <span class="scan-item-price">${pl}</span>
+      <button class="scan-item-price-btn" onclick="editScanPrice(${item.id}, this)" title="Tap to edit price">${pl}</button>
     </div>`;
   }).join('');
+}
+
+function editScanPrice(id, btn) {
+  const item = scanItems.find(i => i.id === id);
+  if (!item || typeof item.price === 'string') return;
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.className = 'scan-item-price-edit';
+  input.value = item.price.toFixed(2);
+  input.min = '0';
+  input.step = '0.01';
+  btn.replaceWith(input);
+  input.focus();
+  input.select();
+  const save = () => {
+    const val = parseFloat(input.value);
+    if (!isNaN(val)) { item.price = val; item.estimated = false; }
+    renderScanResults();
+  };
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') renderScanResults(); });
 }
 
 function toggleScanItem(id) {
@@ -1251,6 +1332,9 @@ function confirmScan() {
 function closeScan() {
   document.getElementById('scanOverlay').classList.remove('visible');
   document.getElementById('scanImgWrap').style.display = 'none';
+  document.getElementById('scanActions').style.display = 'none';
+  document.getElementById('scanProgressWrap').style.display = 'none';
+  document.getElementById('scanProgressBar').style.setProperty('--pct', '0%');
   scanItems = [];
 }
 </script>
