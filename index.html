@@ -199,6 +199,72 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 
 .empty-msg { color: var(--text3); font-size: 14px; text-align: center; padding: 48px 20px; grid-column: 1/-1; }
 
+/* Text parse */
+.parse-section {
+  padding: 10px 12px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.parse-toggle {
+  width: 100%;
+  background: none;
+  border: 1px dashed var(--border2);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 9px;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.parse-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.parse-box {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.parse-box.open { display: flex; }
+.parse-ta {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  resize: none;
+  min-height: 100px;
+  transition: border-color 0.18s;
+  line-height: 1.5;
+}
+.parse-ta:focus { border-color: var(--accent); }
+.parse-ta::placeholder { color: var(--text3); }
+.parse-btn {
+  background: var(--accent);
+  border: none;
+  color: #001a22;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  padding: 11px;
+  cursor: pointer;
+  transition: opacity 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.parse-btn:hover { opacity: 0.9; }
+.parse-btn:disabled { opacity: 0.4; cursor: default; }
+.parse-status { font-size: 12px; color: var(--text2); text-align: center; display: none; }
+
 /* Custom item */
 .custom-row {
   flex-shrink: 0; display: flex; gap: 8px;
@@ -481,10 +547,18 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
       <div class="items-grid" id="itemList"></div>
     </div>
 
-    <div class="custom-row">
-      <input class="ci" id="customName" type="text" placeholder="Custom item…">
-      <input class="ci ci-price" id="customPrice" type="number" min="0" step="0.01" placeholder="£0">
-      <button class="ci-add" onclick="addCustomItem()">+</button>
+    <div class="parse-section">
+      <button class="parse-toggle" onclick="toggleParseBox()">
+        <span>📋</span> Build Quote - Add Text List
+      </button>
+      <div class="parse-box" id="parseBox">
+        <textarea class="parse-ta" id="parseTa" placeholder="Paste or type your items list here e.g.&#10;Sofa x1&#10;Double bed x2&#10;Washing machine&#10;3 wardrobes&#10;5 bin bags"></textarea>
+        <div class="parse-status" id="parseStatus"></div>
+        <button class="parse-btn" id="parseBtn" onclick="parseTextList()">
+          <span id="parseBtnSpinner" style="display:none" class="scan-spinner" style="width:14px;height:14px"></span>
+          ✨ Build Quote
+        </button>
+      </div>
     </div>
 
   </div>
@@ -499,9 +573,6 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 
     <div class="qp-lines" id="quoteLines"></div>
 
-    <div class="qp-notes">
-      <textarea class="notes-ta" placeholder="Notes, access details, special instructions…" rows="2"></textarea>
-    </div>
 
     <div class="qp-totals">
       <div class="t-row"><span class="t-lbl">Collection Fee</span><span class="t-val">£25.00</span></div>
@@ -980,17 +1051,88 @@ function addItem(name, price, kg) {
   renderQuote();
 }
 
-function addCustomItem() {
-  const name = document.getElementById('customName').value.trim();
-  const price = parseFloat(document.getElementById('customPrice').value);
-  if (!name) return;
-  addItem(name, isNaN(price) ? 0 : price, 0);
-  document.getElementById('customName').value = '';
-  document.getElementById('customPrice').value = '';
+
+function toggleParseBox() {
+  const box = document.getElementById('parseBox');
+  box.classList.toggle('open');
+  if (box.classList.contains('open')) {
+    setTimeout(() => document.getElementById('parseTa').focus(), 100);
+  }
 }
 
-document.getElementById('customName').addEventListener('keydown', e => { if (e.key === 'Enter') addCustomItem(); });
-document.getElementById('customPrice').addEventListener('keydown', e => { if (e.key === 'Enter') addCustomItem(); });
+async function parseTextList() {
+  const text = document.getElementById('parseTa').value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('parseBtn');
+  const status = document.getElementById('parseStatus');
+  btn.disabled = true;
+  status.style.display = 'block';
+  status.textContent = 'Analysing your list…';
+
+  const presetNames = [...new Set(PRESETS.map(p => p.name))].join('\n');
+
+  try {
+    const response = await fetch('https://anthropic-proxy.steven-d3e.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: `You are building a house clearance quote. Parse this item list and match each item to our price list.
+
+ITEM LIST:
+${text}
+
+OUR PRICE LIST:
+${presetNames}
+
+Return ONLY a JSON array. Each object must have:
+- "name": exact name from price list if matched, otherwise a clear descriptive name
+- "matched": true if matched to price list exactly, false if not
+- "qty": quantity as integer (look for numbers, x2, (x3) etc — default 1 if not specified)
+- "estimatedPrice": if not matched, estimate a fair UK house clearance price as a number. If matched use 0.
+- "kg": estimated weight in kg if not matched (if matched use 0)
+
+Be generous with matching — "sofa" should match "Sofa (3-seater)", "double bed" should match "Double Bed Frame", "zimmer" or "zimmer frame" should match wheelchair/mobility items, "commode" = mobility medical item ~£15. Include every item mentioned.`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content?.find(b => b.type === 'text')?.text || '[]';
+    const items = JSON.parse(raw.replace(/\`\`\`json|\`\`\`/g, '').trim());
+
+    let added = 0;
+    items.forEach(d => {
+      const preset = PRESETS.find(p => p.name === d.name);
+      const isMatched = d.matched && !!preset;
+      const price = isMatched ? preset.price : (d.estimatedPrice || 5);
+      const kg = isMatched ? preset.kg : (d.kg || 0);
+      for (let q = 0; q < (d.qty || 1); q++) {
+        addItem(d.name, price, kg);
+        added++;
+      }
+    });
+
+    status.textContent = `✓ Added ${added} item${added !== 1 ? 's' : ''} to quote`;
+    status.style.color = 'var(--accent)';
+    document.getElementById('parseTa').value = '';
+    setTimeout(() => {
+      document.getElementById('parseBox').classList.remove('open');
+      status.style.display = 'none';
+      status.style.color = 'var(--text2)';
+    }, 2000);
+
+  } catch(err) {
+    status.textContent = 'Error: ' + (err.message || 'something went wrong');
+    status.style.color = '#f87171';
+  }
+
+  btn.disabled = false;
+}
 
 function changeQty(id, d) {
   const l = lines.find(l => l.id === id);
