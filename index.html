@@ -568,7 +568,10 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 
     <div class="qp-head">
       <span class="qp-title">Quote</span>
-      <span class="qp-count" id="quoteCount">0 items</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="qp-count" id="quoteCount">0 items</span>
+        <button onclick="clearQuote()" style="background:#f871711a;border:1px solid #f87171;color:#f87171;font-size:12px;font-weight:700;border-radius:6px;padding:5px 12px;cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;" onmouseover="this.style.background='#f87171';this.style.color='#fff'" onmouseout="this.style.background='#f871711a';this.style.color='#f87171'">🗑 Clear</button>
+      </div>
     </div>
 
     <div class="qp-lines" id="quoteLines"></div>
@@ -1051,6 +1054,14 @@ function addItem(name, price, kg) {
   renderQuote();
 }
 
+
+function clearQuote() {
+  if (lines.length === 0) return;
+  if (confirm('Clear all items from the quote?')) {
+    lines = [];
+    renderQuote();
+  }
+}
 
 function toggleParseBox() {
   const box = document.getElementById('parseBox');
