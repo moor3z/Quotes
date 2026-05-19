@@ -543,17 +543,7 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
       </div>
     </div>
 
-    <div class="cat-scroll-wrap">
-      <button class="cat-arrow cat-arrow-l" id="catArrowL" onclick="scrollCats(-1)">&#8249;</button>
-      <div class="cat-scroll" id="catScroll"></div>
-      <button class="cat-arrow cat-arrow-r" id="catArrowR" onclick="scrollCats(1)">&#8250;</button>
-    </div>
-
-    <div class="grid-wrap">
-      <div class="items-grid" id="itemList"></div>
-    </div>
-
-    <div class="parse-section">
+    <div class="parse-section" style="padding:8px 12px;border-bottom:1px solid var(--border)">
       <button class="parse-toggle" onclick="toggleParseBox()">
         <span>📋</span> Build Quote - Add Text List
       </button>
@@ -565,6 +555,17 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
           ✨ Build Quote
         </button>
       </div>
+    </div>
+
+    <div class="cat-scroll-wrap">
+      <button class="cat-arrow cat-arrow-l" id="catArrowL" onclick="scrollCats(-1)">&#8249;</button>
+      <div class="cat-scroll" id="catScroll"></div>
+      <button class="cat-arrow cat-arrow-r" id="catArrowR" onclick="scrollCats(1)">&#8250;</button>
+    </div>
+
+    <div class="grid-wrap">
+      <div class="items-grid" id="itemList"></div>
+
     </div>
 
   </div>
