@@ -1125,8 +1125,24 @@ Be generous with matching — "sofa" should match "Sofa (3-seater)", "double bed
 
     let added = 0;
     items.forEach(d => {
-      const preset = PRESETS.find(p => p.name === d.name);
-      const isMatched = d.matched && !!preset;
+      let preset = PRESETS.find(p => p.name === d.name);
+      let isMatched = d.matched && !!preset;
+      if (!preset) {
+        const nameLower = d.name.toLowerCase();
+        preset = PRESETS.find(p => {
+          const pLower = p.name.toLowerCase();
+          return pLower.includes(nameLower) || nameLower.includes(pLower);
+        });
+        if (!preset) {
+          const nameWords = nameLower.split(/\s+/).filter(w => w.length > 3);
+          preset = PRESETS.find(p => {
+            const pWords = p.name.toLowerCase().split(/\s+/);
+            const matches = nameWords.filter(w => pWords.some(pw => pw.includes(w) || w.includes(pw)));
+            return matches.length >= Math.min(2, nameWords.length);
+          });
+        }
+        if (preset) isMatched = true;
+      }
       const price = isMatched ? preset.price : (d.estimatedPrice || 5);
       const kg = isMatched ? preset.kg : (d.kg || 0);
       for (let q = 0; q < (d.qty || 1); q++) {
@@ -1305,7 +1321,7 @@ async function handlePhoto(event, fileArg, multiMode) {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const MAX = 1024;
+      const MAX = 1600;
       let w = img.width, h = img.height;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -1313,9 +1329,12 @@ async function handlePhoto(event, fileArg, multiMode) {
       }
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      res(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+      res(canvas.toDataURL('image/jpeg', 0.92).split(',')[1]);
     };
     img.src = url;
   });
@@ -1334,7 +1353,7 @@ async function handlePhoto(event, fileArg, multiMode) {
       headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
+        max_tokens: 2000,
         messages: [{
           role: 'user',
           content: [
@@ -1373,7 +1392,7 @@ Example: [{"item":"large grey fabric corner sofa","qty":1,"condition":"fair","no
       headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
+        max_tokens: 2500,
         messages: [{
           role: 'user',
           content: [{ type: 'text', text: `You are helping build a house clearance quote. Match each identified item to the closest item in our price list.
@@ -1402,12 +1421,34 @@ Match as closely as possible. If an item could be multiple things, pick the most
     const detected = JSON.parse(clean);
 
     const newItems = detected.map((d, i) => {
-      const preset = PRESETS.find(p => p.name === d.name);
-      const isMatched = d.matched && !!preset;
+      // First try exact match
+      let preset = PRESETS.find(p => p.name === d.name);
+      let isMatched = d.matched && !!preset;
+
+      // If no exact match, try fuzzy matching
+      if (!preset) {
+        const nameLower = d.name.toLowerCase();
+        // Try contains match both ways
+        preset = PRESETS.find(p => {
+          const pLower = p.name.toLowerCase();
+          return pLower.includes(nameLower) || nameLower.includes(pLower);
+        });
+        // Try word overlap match
+        if (!preset) {
+          const nameWords = nameLower.split(/\s+/).filter(w => w.length > 3);
+          preset = PRESETS.find(p => {
+            const pWords = p.name.toLowerCase().split(/\s+/);
+            const matches = nameWords.filter(w => pWords.some(pw => pw.includes(w) || w.includes(pw)));
+            return matches.length >= Math.min(2, nameWords.length);
+          });
+        }
+        if (preset) isMatched = true;
+      }
+
       const price = isMatched ? preset.price : (d.estimatedPrice || 5);
       return {
         id: scanItems.length + i,
-        name: d.name,
+        name: preset ? preset.name : d.name,
         notes: d.notes,
         qty: d.qty || 1,
         price: price,
