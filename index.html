@@ -1095,7 +1095,7 @@ async function parseTextList() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-5',
         max_tokens: 2000,
         messages: [{
           role: 'user',
@@ -1343,79 +1343,53 @@ async function handlePhoto(event, fileArg, multiMode) {
   const presetNames = [...new Set(PRESETS.map(p => p.name))].join('\n');
 
   try {
-    // PASS 1 — identify what's in the photo
-    document.getElementById('scanStatusTxt').textContent = 'Pass 1: Identifying items…';
-    const ctrl1 = new AbortController();
-    const t1 = setTimeout(() => ctrl1.abort(), 30000);
-    const resp1 = await fetch('https://anthropic-proxy.steven-d3e.workers.dev', {
-      signal: ctrl1.signal,
+    // SINGLE PASS — identify and match in one call
+    document.getElementById('scanStatusTxt').textContent = 'Analysing your photo…';
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 40000);
+    const resp = await fetch('https://anthropic-proxy.steven-d3e.workers.dev', {
+      signal: ctrl.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2000,
+        model: 'claude-sonnet-4-5',
+        max_tokens: 3000,
         messages: [{
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
-            { type: 'text', text: `You are surveying a property for a house clearance company. Look carefully at this photo and list every single item you can see that would need to be removed — furniture, appliances, electronics, equipment, boxes, bags, garden items, anything.
+            { type: 'text', text: `You are an experienced house clearance surveyor. Examine this photo, identify everything that needs clearing, and match each item to our price list — all in one go.
 
-Be thorough. Include items that are:
-- Partially visible or in the background
-- Stacked or piled up
-- In poor condition
-- Multiple of the same item
+STEP 1 — Identify systematically:
+1. Large furniture (sofas, beds, wardrobes, tables, cabinets)
+2. Appliances (white goods, kitchen appliances, electronics, TVs)
+3. Smaller furniture (chairs, stools, side tables, shelving)
+4. Boxes, bags, and loose clutter
+5. Items partially hidden, stacked, behind other items, or in the background
 
-Return ONLY a JSON array of objects with:
-- "item": descriptive name of what you see (e.g. "large fabric 3-seater sofa", "double mattress leaning against wall")
-- "qty": how many you can see (integer)
-- "condition": one word — good / fair / poor
-- "notes": any useful detail (size, material, location in room)
+Be specific about SIZE (2-seater vs 3-seater sofa, single vs double mattress, TV screen size) and distinguish similar items (sofa vs sofa bed, chest of drawers vs sideboard, bookcase vs wardrobe, fridge vs fridge-freezer). Count multiples accurately. Do not invent items you cannot see.
 
-Example: [{"item":"large grey fabric corner sofa","qty":1,"condition":"fair","notes":"L-shaped, left hand facing"},{"item":"flat screen TV","qty":1,"condition":"good","notes":"approx 50 inch, wall mounted"}]` }
+STEP 2 — Match each item to this price list using EXACT names where possible:
+${presetNames}
+
+Respect size and type when matching — a "3-seater sofa" matches "Sofa (3-seater)" not "Sofa (2-seater)".
+
+Return ONLY a JSON array. Each object must have:
+- "name": EXACT price list name if matched, otherwise a clear descriptive name
+- "matched": true only if it maps to a real price list entry
+- "qty": exact count (integer)
+- "notes": condition, size, material or position
+- "confidence": "high" or "low"
+- "estimatedPrice": number, no symbol. If matched use 0. If not matched, estimate fair UK clearance price by size/weight/effort: small light items 2-5; medium 5-15; large/heavy 20-60.
+- "kg": estimated weight in kg if NOT matched (use 0 if matched)
+
+Include every visible item. Do not merge or drop items.` }
           ]
         }]
       })
     });
-    clearTimeout(t1);
-    const d1 = await resp1.json();
-    const raw1 = d1.content?.find(b => b.type === 'text')?.text || '[]';
-    const seen = JSON.parse(raw1.replace(/```json|```/g, '').trim());
-
-    // PASS 2 — match to price list
-    document.getElementById('scanStatusTxt').textContent = 'Pass 2: Matching to price list…';
-    const ctrl2 = new AbortController();
-    const t2 = setTimeout(() => ctrl2.abort(), 30000);
-    const resp2 = await fetch('https://anthropic-proxy.steven-d3e.workers.dev', {
-      signal: ctrl2.signal,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2500,
-        messages: [{
-          role: 'user',
-          content: [{ type: 'text', text: `You are helping build a house clearance quote. Match each identified item to the closest item in our price list.
-
-IDENTIFIED ITEMS:
-${JSON.stringify(seen, null, 2)}
-
-OUR PRICE LIST (match to these exact names where possible):
-${presetNames}
-
-Return ONLY a JSON array. Each object must have:
-- "name": exact name from price list if matched, otherwise a clear descriptive name
-- "matched": true if it matches a price list item exactly, false if not
-- "qty": quantity (integer)
-- "notes": condition and any useful notes
-- "estimatedPrice": a number (no currency symbol). If matched to price list, use 0 (we will look it up). If NOT matched, estimate a fair UK house clearance price in GBP based on the item's size, weight, and effort to remove. Small lightweight items (cups, ornaments) = 2-5. Medium items (lamps, small boxes) = 5-15. Large or heavy items (unlisted furniture, equipment) = 20-60. Be reasonable.
-
-Match as closely as possible. If an item could be multiple things, pick the most likely match. Include every item identified.` }]
-        }]
-      })
-    });
-    clearTimeout(t2);
-    const d2 = await resp2.json();
+    clearTimeout(timeout);
+    const d2 = await resp.json();
     const text = d2.content?.find(b => b.type === 'text')?.text || '[]';
     const clean = text.replace(/```json|```/g, '').trim();
     const detected = JSON.parse(clean);
@@ -1452,7 +1426,7 @@ Match as closely as possible. If an item could be multiple things, pick the most
         notes: d.notes,
         qty: d.qty || 1,
         price: price,
-        kg: preset ? preset.kg : 0,
+        kg: preset ? preset.kg : (d.kg || 0),
         matched: isMatched,
         estimated: !isMatched,
         checked: true
