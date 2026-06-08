@@ -314,6 +314,12 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 }
 
 .qp-lines { flex: 1; overflow-y: auto; }
+.ql-section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 6px; background: var(--surface); position: sticky; top: 0; }
+.ql-section-hdr > span { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; color: var(--text2); display: flex; align-items: center; gap: 7px; }
+.ql-sec-count { background: var(--card2); color: var(--text2); font-size: 10px; font-weight: 600; border-radius: 100px; padding: 1px 7px; }
+.ql-sec-clear { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.4); color: #f87171; font-size: 10px; font-weight: 700; border-radius: 5px; padding: 3px 9px; cursor: pointer; transition: all 0.15s; }
+.ql-sec-clear:hover { background: #f87171; color: #fff; }
+.ql-empty { color: var(--text3); font-size: 13px; text-align: center; padding: 24px 16px; }
 
 .ql {
   display: flex; align-items: center; gap: 8px;
@@ -1177,11 +1183,10 @@ function changeQty(id, d) {
 }
 function removeLine(id) { lines = lines.filter(l => l.id !== id); renderQuote(); }
 
-function renderQuote() {
-  const c = document.getElementById('quoteLines');
-  const count = lines.reduce((s,l) => s + l.qty, 0);
-  document.getElementById('quoteCount').textContent = count ? `${count} item${count!==1?'s':''}` : '0 items';
-  c.innerHTML = lines.map(l => `
+const BULKY_THRESHOLD = 25;
+
+function lineHtml(l) {
+  return `
     <div class="ql">
       <span class="ql-name">${l.name}</span>
       <div class="ql-ctrl">
@@ -1192,7 +1197,38 @@ function renderQuote() {
       <span class="ql-kg">${l.kg * l.qty}kg</span>
       <span class="ql-amt">${l.priceLabel ? l.priceLabel : '£'+(l.price*l.qty).toFixed(2)}</span>
       <button class="ql-del" onclick="removeLine(${l.id})">✕</button>
-    </div>`).join('');
+    </div>`;
+}
+
+function clearSection(type) {
+  const isBulky = type === 'bulky';
+  const remaining = lines.filter(l => isBulky ? (l.kg||0) < BULKY_THRESHOLD : (l.kg||0) >= BULKY_THRESHOLD);
+  if (lines.length === remaining.length) return;
+  if (confirm(`Clear all ${type} items?`)) {
+    lines = remaining;
+    renderQuote();
+  }
+}
+
+function renderQuote() {
+  const c = document.getElementById('quoteLines');
+  const count = lines.reduce((s,l) => s + l.qty, 0);
+  document.getElementById('quoteCount').textContent = count ? `${count} item${count!==1?'s':''}` : '0 items';
+
+  const bulky = lines.filter(l => (l.kg||0) >= BULKY_THRESHOLD);
+  const small = lines.filter(l => (l.kg||0) < BULKY_THRESHOLD);
+
+  let html = '';
+  if (bulky.length) {
+    html += `<div class="ql-section-hdr"><span>📦 Bulky Items <span class="ql-sec-count">${bulky.length}</span></span><button class="ql-sec-clear" onclick="clearSection('bulky')">Clear</button></div>`;
+    html += bulky.map(lineHtml).join('');
+  }
+  if (small.length) {
+    html += `<div class="ql-section-hdr"><span>�small Small Items <span class="ql-sec-count">${small.length}</span></span><button class="ql-sec-clear" onclick="clearSection('small')">Clear</button></div>`.replace('�small', '🧺');
+    html += small.map(lineHtml).join('');
+  }
+  if (!html) html = '<div class="ql-empty">No items added yet</div>';
+  c.innerHTML = html;
   const sub = lines.reduce((s,l) => s + l.price * l.qty, 0);
   const collection = 25;
   const vat = (sub + collection) * 0.2;
