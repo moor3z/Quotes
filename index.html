@@ -339,7 +339,7 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 .qb:hover { border-color: var(--accent); color: var(--accent); }
 .qv { font-family: var(--mono); font-size: 13px; min-width: 18px; text-align: center; color: var(--text); }
 .ql-kg { font-family: var(--mono); font-size: 11px; color: var(--text3); flex-shrink: 0; }
-.ql-amt { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--accent); flex-shrink: 0; min-width: 52px; text-align: right; }
+.ql-amt { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--accent); flex-shrink: 0; min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
 .ql-del { background: none; border: none; color: var(--text3); font-size: 13px; cursor: pointer; padding: 4px; flex-shrink: 0; transition: color 0.15s; }
 .ql-del:hover { color: #f87171; }
 
@@ -476,6 +476,74 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 .scan-error { color: #f87171; font-size: 13px; text-align: center; padding: 8px 0; }
 
 /* ════ MOBILE ════ */
+/* ════ POLISH: TOAST ════ */
+.toast {
+  position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%) translateY(20px);
+  background: var(--card2); border: 1px solid rgba(0,183,235,0.4);
+  color: var(--text); font-size: 13px; font-weight: 600;
+  border-radius: 100px; padding: 10px 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  opacity: 0; pointer-events: none; z-index: 998;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  display: flex; align-items: center; gap: 8px;
+  max-width: 90vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast .tick { color: var(--accent); font-weight: 700; }
+
+/* ════ POLISH: QUOTE COUNT PULSE ════ */
+@keyframes countPulse { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.qp-count.pulse { animation: countPulse 0.35s ease; }
+
+/* ════ POLISH: STICKY MOBILE TOTAL BAR ════ */
+.sticky-total {
+  display: none;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 997;
+  background: rgba(12,15,24,0.97);
+  border-top: 1px solid rgba(0,183,235,0.3);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  align-items: center; justify-content: space-between;
+  cursor: pointer;
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.4);
+}
+.sticky-total-items { font-size: 12px; font-weight: 600; color: var(--text2); }
+.sticky-total-amt { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--accent); }
+
+/* ════ POLISH: SCAN SKELETON ════ */
+.skel-list { display: flex; flex-direction: column; gap: 8px; }
+.skel-row {
+  height: 52px; border-radius: var(--radius-sm);
+  background: linear-gradient(100deg, var(--card) 40%, var(--card2) 50%, var(--card) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.scan-item { animation: itemIn 0.25s ease backwards; }
+.scan-item:nth-child(1){animation-delay:0.02s}.scan-item:nth-child(2){animation-delay:0.06s}
+.scan-item:nth-child(3){animation-delay:0.10s}.scan-item:nth-child(4){animation-delay:0.14s}
+.scan-item:nth-child(5){animation-delay:0.18s}.scan-item:nth-child(6){animation-delay:0.22s}
+@keyframes itemIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+
+/* ════ POLISH: PRESS STATES ════ */
+.icard:active { transform: scale(0.97); transition: transform 0.08s; }
+.icard.flash { animation: cardFlash 0.45s ease; }
+@keyframes cardFlash { 0% { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,183,235,0.35); } 100% { border-color: var(--border); box-shadow: none; } }
+.qb:active, .ql-del:active, .hbtn:active, .parse-btn:active, .scan-confirm:active, .scan-cancel:active { transform: scale(0.92); }
+.qb, .ql-del, .hbtn, .parse-btn, .scan-confirm, .scan-cancel { transition: all 0.15s, transform 0.08s; }
+
+/* ════ POLISH: EMPTY STATE ════ */
+.ql-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 36px 20px !important;
+}
+.ql-empty-icon { font-size: 28px; opacity: 0.5; }
+.ql-empty-hint { font-size: 12px; color: var(--text3); max-width: 220px; text-align: center; line-height: 1.5; }
+
+/* ════ POLISH: REDUCED MOTION ════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
 @media (max-width: 700px) {
   body { overflow: auto; height: auto; }
   .layout { 
@@ -492,9 +560,19 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
   .items-grid { grid-template-columns: repeat(2, 1fr); }
   .quote-panel { overflow: visible; flex-shrink: 0; }
   .qp-lines { overflow: visible; max-height: none; height: auto; }
-  .icard { padding: 12px 10px 10px; }
+  .icard { padding: 14px 10px 12px; }
   .icard-icon { font-size: 24px; }
-  .icard-name { font-size: 12px; }
+  .icard-name { font-size: 13px; }
+  .icard-btn { padding: 10px; font-size: 12px; }
+  /* 44px touch targets */
+  .qb { width: 38px; height: 38px; font-size: 17px; border-radius: 9px; }
+  .ql-del { padding: 10px; font-size: 15px; }
+  .ql { padding: 13px 16px; gap: 10px; }
+  .ql-name { font-size: 14px; }
+  .ql-amt { font-size: 14px; }
+  .cat-pill { padding: 9px 15px; font-size: 12px; }
+  .sticky-total { display: flex; }
+  .quote-panel { padding-bottom: 64px; }
 }
 
 /* ════ PRINT ════ */
@@ -1051,7 +1129,7 @@ function renderItems(filter = '') {
       <span class="icard-kg">${item.kg}kg</span>
       <span class="icard-price">${pl}</span>
       <button class="icard-btn">+ Add</button>`;
-    c.querySelector('.icard-btn').onclick = e => { e.stopPropagation(); addItem(item.name, item.price, item.kg); };
+    c.querySelector('.icard-btn').onclick = e => { e.stopPropagation(); addItem(item.name, item.price, item.kg); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash'); };
     c.onclick = () => addItem(item.name, item.price, item.kg);
     list.appendChild(c);
   });
@@ -1059,12 +1137,38 @@ function renderItems(filter = '') {
 
 function filterItems() { renderItems(document.getElementById('searchInput').value); }
 
-function addItem(name, price, kg) {
+function showSkeleton() {
+  document.getElementById('scanResults').innerHTML =
+    '<div class="skel-list">' + '<div class="skel-row"></div>'.repeat(4) + '</div>';
+}
+function clearSkeleton() {
+  const r = document.getElementById('scanResults');
+  if (r.querySelector('.skel-list')) r.innerHTML = '';
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastTxt').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+function pulseCount() {
+  const c = document.getElementById('quoteCount');
+  c.classList.remove('pulse');
+  void c.offsetWidth;
+  c.classList.add('pulse');
+}
+
+function addItem(name, price, kg, silent) {
   const np = typeof price === 'string' ? 0 : price;
   const ex = lines.find(l => l.name === name);
   if (ex) { ex.qty++; }
   else { lines.push({ id: nextId++, name, price: np, priceLabel: typeof price === 'string' ? price : null, kg: kg||0, qty: 1 }); }
   renderQuote();
+  if (!silent) { showToast(name + ' added'); pulseCount(); }
 }
 
 
@@ -1152,12 +1256,14 @@ Be generous with matching — "sofa" should match "Sofa (3-seater)", "double bed
       const price = isMatched ? preset.price : (d.estimatedPrice || 5);
       const kg = isMatched ? preset.kg : (d.kg || 0);
       for (let q = 0; q < (d.qty || 1); q++) {
-        addItem(d.name, price, kg);
+        addItem(preset ? preset.name : d.name, price, kg, true);
         added++;
       }
     });
 
     status.textContent = `✓ Added ${added} item${added !== 1 ? 's' : ''} to quote`;
+    showToast(added + ' item' + (added!==1?'s':'') + ' added to quote');
+    pulseCount();
     status.style.color = 'var(--accent)';
     document.getElementById('parseTa').value = '';
     setTimeout(() => {
@@ -1227,7 +1333,7 @@ function renderQuote() {
     html += `<div class="ql-section-hdr"><span>�small Small Items <span class="ql-sec-count">${small.length}</span></span><button class="ql-sec-clear" onclick="clearSection('small')">Clear</button></div>`.replace('�small', '🧺');
     html += small.map(lineHtml).join('');
   }
-  if (!html) html = '<div class="ql-empty">No items added yet</div>';
+  if (!html) html = '<div class="ql ql-empty"><span class="ql-empty-icon">🛋️</span><span class="ql-empty-hint">Scan a photo, paste a text list, or tap items in the catalogue to start your quote</span></div>';
   c.innerHTML = html;
   const sub = lines.reduce((s,l) => s + l.price * l.qty, 0);
   const collection = 25;
@@ -1237,6 +1343,11 @@ function renderQuote() {
   document.getElementById('vatAmt').textContent      = `£${vat.toFixed(2)}`;
   document.getElementById('grandTotal').textContent  = `£${(sub+collection+vat).toFixed(2)}`;
   document.getElementById('totalWeight').textContent = `${kg} kg`;
+  const st = document.getElementById('stickyItems');
+  if (st) {
+    st.textContent = count ? `${count} item${count!==1?'s':''} · ${kg}kg` : '0 items';
+    document.getElementById('stickyAmt').textContent = `£${(sub+collection+vat).toFixed(2)}`;
+  }
   updateLoadRec(kg);
 }
 
@@ -1299,10 +1410,10 @@ async function handlePhotos(event) {
   const overlay = document.getElementById('scanOverlay');
   overlay.classList.add('visible');
   scanItems = [];
-  document.getElementById('scanResults').innerHTML = '';
   document.getElementById('scanConfirm').disabled = true;
   document.getElementById('scanError').style.display = 'none';
   document.getElementById('scanImgWrap').style.display = 'none';
+  showSkeleton();
 
   const progWrap = document.getElementById('scanProgressWrap');
   const progBar = document.getElementById('scanProgressBar');
@@ -1345,6 +1456,7 @@ async function handlePhoto(event, fileArg, multiMode) {
     document.getElementById('scanError').style.display = 'none';
     document.getElementById('scanSpinner').style.display = 'block';
     document.getElementById('scanStatusTxt').textContent = 'Analysing your photo…';
+    showSkeleton();
 
     // Show image preview for single photo
     const reader = new FileReader();
@@ -1482,6 +1594,7 @@ Include every visible item. Do not merge or drop items.` }
   } catch(err) {
     document.getElementById('scanSpinner').style.display = 'none';
     document.getElementById('scanStatusTxt').textContent = 'Analysis failed';
+    clearSkeleton();
     const errEl = document.getElementById('scanError');
     errEl.style.display = 'block';
     errEl.textContent = err.name === 'AbortError' ? 'Request timed out after 30s. Check your API key has credit at console.anthropic.com' : 'Error: ' + (err.message || JSON.stringify(err));
@@ -1532,12 +1645,13 @@ function toggleScanItem(id) {
 }
 
 function confirmScan() {
-  scanItems.filter(i => i.checked).forEach(item => {
-    for (let q = 0; q < item.qty; q++) {
-      addItem(item.name, item.price, item.kg);
-    }
+  const picked = scanItems.filter(i => i.checked);
+  let total = 0;
+  picked.forEach(item => {
+    for (let q = 0; q < item.qty; q++) { addItem(item.name, item.price, item.kg, true); total++; }
   });
   closeScan();
+  if (total) { showToast(total + ' item' + (total!==1?'s':'') + ' added to quote'); pulseCount(); }
 }
 
 function closeScan() {
@@ -1549,5 +1663,10 @@ function closeScan() {
   scanItems = [];
 }
 </script>
+<div class="toast" id="toast"><span class="tick">✓</span><span id="toastTxt"></span></div>
+<div class="sticky-total" id="stickyTotal" onclick="document.querySelector('.quote-panel').scrollIntoView({behavior:'smooth'})">
+  <span class="sticky-total-items" id="stickyItems">0 items</span>
+  <span class="sticky-total-amt" id="stickyAmt">£30.00</span>
+</div>
 </body>
 </html>
