@@ -669,14 +669,14 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 
 
     <div class="qp-totals">
+      <div class="t-row"><span class="t-lbl">Items</span><span class="t-val" id="subtotal">£0.00</span></div>
       <div class="t-row"><span class="t-lbl">Collection Fee</span><span class="t-val">£25.00</span></div>
-      <div class="t-row"><span class="t-lbl">Subtotal</span><span class="t-val" id="subtotal">£0.00</span></div>
-      <div class="t-row"><span class="t-lbl">VAT 20%</span><span class="t-val" id="vatAmt">£0.00</span></div>
+      <div class="t-row"><span class="t-lbl">Includes VAT (20%)</span><span class="t-val" id="vatAmt">£5.00</span></div>
       <div class="t-row"><span class="t-lbl">Est. Weight</span><span class="t-val" id="totalWeight">0 kg</span></div>
       <div class="t-div"></div>
       <div class="grand-row">
         <span class="grand-lbl">Total inc. VAT</span>
-        <span class="grand-val" id="grandTotal">£0.00</span>
+        <span class="grand-val" id="grandTotal">£25.00</span>
       </div>
       <div id="loadRec" style="display:none;margin-top:14px;background:rgba(0,183,235,0.08);border:1px solid rgba(0,183,235,0.25);border-radius:var(--radius-sm);padding:12px 14px;">
         <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text2);margin-bottom:6px">Recommended Load</div>
@@ -805,285 +805,284 @@ function itemIcon(n) {
 const PRESETS = [
 
   // Lounge
-  { cat:"Lounge", name:"Armchair", price:35, kg:25 },
-  { cat:"Lounge", name:"Sofa (2-seater)", price:60, kg:45 },
-  { cat:"Lounge", name:"Sofa (3-seater)", price:70, kg:60 },
-  { cat:"Lounge", name:"Corner Sofa", price:90, kg:90 },
-  { cat:"Lounge", name:"Sofa Bed (single 1 seater - no mattress)", price:35, kg:50 },
-  { cat:"Lounge", name:"Sofa Bed (single 1 seater - with mattress)", price:50, kg:65 },
-  { cat:"Lounge", name:"Sofa Bed (double/2 seater - no mattress)", price:60, kg:70 },
-  { cat:"Lounge", name:"Sofa Bed (double/2 seater - with mattress)", price:75, kg:85 },
-  { cat:"Lounge", name:"Sofa Bed (L-shape or 3/4 seater - no mattress)", price:95, kg:100 },
-  { cat:"Lounge", name:"Sofa Bed (L-shape or 3/4 seater - with mattress)", price:105, kg:120 },
-  { cat:"Lounge", name:"Footstool", price:12, kg:8 },
-  { cat:"Lounge", name:"Rocking Chair", price:20, kg:11 },
-  { cat:"Lounge", name:"Coffee Table (small)", price:12, kg:12 },
-  { cat:"Lounge", name:"Coffee Table", price:20, kg:20 },
-  { cat:"Lounge", name:"Side Table", price:9, kg:10 },
-  { cat:"Lounge", name:"TV Stand - Small (up to 80cm)", price:14, kg:15 },
-  { cat:"Lounge", name:"TV Stand - Medium (up to 120cm)", price:17, kg:20 },
-  { cat:"Lounge", name:"TV Stand / Unit (large)", price:20, kg:25 },
-  { cat:"Lounge", name:"Bookcase (up to 60x200cm)", price:35, kg:25 },
-  { cat:"Lounge", name:"Bookcase (up to 130x220cm)", price:47, kg:40 },
-  { cat:"Lounge", name:"Display Cabinet", price:40, kg:40 },
-  { cat:"Lounge", name:"Sideboard", price:50, kg:50 },
-  { cat:"Lounge", name:"Fireplace Surround", price:50, kg:50 },
-  { cat:"Lounge", name:"Mirror Small (up to 15 inch/38cm)", price:4, kg:3 },
-  { cat:"Lounge", name:"Mirror Medium (up to 30 inch/76cm)", price:7.50, kg:6 },
-  { cat:"Lounge", name:"Mirror Large (up to 60 inch/150cm)", price:15, kg:10 },
-  { cat:"Lounge", name:"Large Rug", price:20, kg:12 },
-  { cat:"Lounge", name:"Rug (small)", price:10, kg:5 },
-  { cat:"Lounge", name:"TV (up to 20 inch)", price:20, kg:6 },
-  { cat:"Lounge", name:"TV (up to 32 inch)", price:30, kg:8 },
-  { cat:"Lounge", name:"TV (33-55 inch)", price:40, kg:15 },
-  { cat:"Lounge", name:"TV (56 inch+)", price:50, kg:25 },
-  { cat:"Lounge", name:"Heater (electric)", price:4, kg:3 },
-  { cat:"Lounge", name:"Heater (oil-filled)", price:7, kg:8 },
-  { cat:"Lounge", name:"Fan", price:5, kg:3 },
-  { cat:"Lounge", name:"Reclining Armchair", price:50, kg:30 },
+  { cat:"Lounge", name:"Armchair", price:42, kg:25 },
+  { cat:"Lounge", name:"Sofa (2-seater)", price:72, kg:45 },
+  { cat:"Lounge", name:"Sofa (3-seater)", price:84, kg:60 },
+  { cat:"Lounge", name:"Corner Sofa", price:108, kg:90 },
+  { cat:"Lounge", name:"Sofa Bed (single 1 seater - no mattress)", price:42, kg:50 },
+  { cat:"Lounge", name:"Sofa Bed (single 1 seater - with mattress)", price:60, kg:65 },
+  { cat:"Lounge", name:"Sofa Bed (double/2 seater - no mattress)", price:72, kg:70 },
+  { cat:"Lounge", name:"Sofa Bed (double/2 seater - with mattress)", price:90, kg:85 },
+  { cat:"Lounge", name:"Sofa Bed (L-shape or 3/4 seater - no mattress)", price:114, kg:100 },
+  { cat:"Lounge", name:"Sofa Bed (L-shape or 3/4 seater - with mattress)", price:126, kg:120 },
+  { cat:"Lounge", name:"Footstool", price:14, kg:8 },
+  { cat:"Lounge", name:"Rocking Chair", price:24, kg:11 },
+  { cat:"Lounge", name:"Coffee Table (small)", price:14, kg:12 },
+  { cat:"Lounge", name:"Coffee Table", price:24, kg:20 },
+  { cat:"Lounge", name:"Side Table", price:11, kg:10 },
+  { cat:"Lounge", name:"TV Stand - Small (up to 80cm)", price:17, kg:15 },
+  { cat:"Lounge", name:"TV Stand - Medium (up to 120cm)", price:20, kg:20 },
+  { cat:"Lounge", name:"TV Stand / Unit (large)", price:24, kg:25 },
+  { cat:"Lounge", name:"Bookcase (up to 60x200cm)", price:42, kg:25 },
+  { cat:"Lounge", name:"Bookcase (up to 130x220cm)", price:56, kg:40 },
+  { cat:"Lounge", name:"Display Cabinet", price:48, kg:40 },
+  { cat:"Lounge", name:"Sideboard", price:60, kg:50 },
+  { cat:"Lounge", name:"Fireplace Surround", price:60, kg:50 },
+  { cat:"Lounge", name:"Mirror Small (up to 15 inch/38cm)", price:5, kg:3 },
+  { cat:"Lounge", name:"Mirror Medium (up to 30 inch/76cm)", price:9, kg:6 },
+  { cat:"Lounge", name:"Mirror Large (up to 60 inch/150cm)", price:18, kg:10 },
+  { cat:"Lounge", name:"Large Rug", price:24, kg:12 },
+  { cat:"Lounge", name:"Rug (small)", price:12, kg:5 },
+  { cat:"Lounge", name:"TV (up to 20 inch)", price:24, kg:6 },
+  { cat:"Lounge", name:"TV (up to 32 inch)", price:36, kg:8 },
+  { cat:"Lounge", name:"TV (33-55 inch)", price:48, kg:15 },
+  { cat:"Lounge", name:"TV (56 inch+)", price:60, kg:25 },
+  { cat:"Lounge", name:"Heater (electric)", price:5, kg:3 },
+  { cat:"Lounge", name:"Heater (oil-filled)", price:8, kg:8 },
+  { cat:"Lounge", name:"Fan", price:6, kg:3 },
+  { cat:"Lounge", name:"Reclining Armchair", price:60, kg:30 },
 
   // Bedroom
-  { cat:"Bedroom", name:"Single Bed Frame", price:30, kg:20 },
-  { cat:"Bedroom", name:"Double Bed Frame", price:40, kg:30 },
-  { cat:"Bedroom", name:"King Bed Frame", price:50, kg:40 },
-  { cat:"Bedroom", name:"Bunk Bed Frame", price:55, kg:50 },
-  { cat:"Bedroom", name:"Single Mattress", price:25, kg:15 },
-  { cat:"Bedroom", name:"Double Mattress", price:40, kg:30 },
-  { cat:"Bedroom", name:"King Mattress", price:50, kg:35 },
-  { cat:"Bedroom", name:"Super King Mattress", price:60, kg:40 },
-  { cat:"Bedroom", name:"Mattress Topper (any size)", price:10, kg:5 },
-  { cat:"Bedroom", name:"Wardrobe Single (up to 90cm, freestanding)", price:30, kg:35 },
-  { cat:"Bedroom", name:"Wardrobe Double (up to 160cm, freestanding)", price:45, kg:55 },
-  { cat:"Bedroom", name:"Wardrobe Triple (up to 240cm, freestanding)", price:60, kg:75 },
-  { cat:"Bedroom", name:"Wardrobe Quadruple (over 240cm, freestanding)", price:80, kg:90 },
-  { cat:"Bedroom", name:"Wardrobe (large / fitted)", price:80, kg:100 },
-  { cat:"Bedroom", name:"Chest of Drawers", price:35, kg:30 },
-  { cat:"Bedroom", name:"Dressing Table", price:35, kg:25 },
-  { cat:"Bedroom", name:"Bed Side Table", price:8, kg:8 },
-  { cat:"Bedroom", name:"Curtains (per pair)", price:10, kg:3 },
-  { cat:"Bedroom", name:"Blind (per blind)", price:8, kg:2 },
-  { cat:"Bedroom", name:"Dehumidifier (up to 15kg)", price:40, kg:15 },
-  { cat:"Bedroom", name:"Trouser Press", price:9, kg:5 },
+  { cat:"Bedroom", name:"Single Bed Frame", price:36, kg:20 },
+  { cat:"Bedroom", name:"Double Bed Frame", price:48, kg:30 },
+  { cat:"Bedroom", name:"King Bed Frame", price:60, kg:40 },
+  { cat:"Bedroom", name:"Bunk Bed Frame", price:66, kg:50 },
+  { cat:"Bedroom", name:"Single Mattress", price:30, kg:15 },
+  { cat:"Bedroom", name:"Double Mattress", price:48, kg:30 },
+  { cat:"Bedroom", name:"King Mattress", price:60, kg:35 },
+  { cat:"Bedroom", name:"Super King Mattress", price:72, kg:40 },
+  { cat:"Bedroom", name:"Mattress Topper (any size)", price:12, kg:5 },
+  { cat:"Bedroom", name:"Wardrobe Single (up to 90cm, freestanding)", price:36, kg:35 },
+  { cat:"Bedroom", name:"Wardrobe Double (up to 160cm, freestanding)", price:54, kg:55 },
+  { cat:"Bedroom", name:"Wardrobe Triple (up to 240cm, freestanding)", price:72, kg:75 },
+  { cat:"Bedroom", name:"Wardrobe Quadruple (over 240cm, freestanding)", price:96, kg:90 },
+  { cat:"Bedroom", name:"Wardrobe (large / fitted)", price:96, kg:100 },
+  { cat:"Bedroom", name:"Chest of Drawers", price:42, kg:30 },
+  { cat:"Bedroom", name:"Dressing Table", price:42, kg:25 },
+  { cat:"Bedroom", name:"Bed Side Table", price:10, kg:8 },
+  { cat:"Bedroom", name:"Curtains (per pair)", price:12, kg:3 },
+  { cat:"Bedroom", name:"Blind (per blind)", price:10, kg:2 },
+  { cat:"Bedroom", name:"Dehumidifier (up to 15kg)", price:48, kg:15 },
+  { cat:"Bedroom", name:"Trouser Press", price:11, kg:5 },
 
   // Kitchen & Dining
-  { cat:"Kitchen & Dining", name:"Dining Table (4 person, not inc glass or marble)", price:30, kg:40 },
-  { cat:"Kitchen & Dining", name:"Dining Table (4 person, glass or marble top)", price:50, kg:60 },
-  { cat:"Kitchen & Dining", name:"Dining Table (6 person, not inc glass or marble)", price:40, kg:55 },
-  { cat:"Kitchen & Dining", name:"Dining Table (6 person, glass or marble top)", price:60, kg:80 },
-  { cat:"Kitchen & Dining", name:"Dining Table (8 person, not inc glass or marble)", price:50, kg:70 },
-  { cat:"Kitchen & Dining", name:"Dining Table (8 person, glass or marble top)", price:70, kg:100 },
-  { cat:"Kitchen & Dining", name:"Dining Chair (no fabric)", price:5, kg:5 },
-  { cat:"Kitchen & Dining", name:"Dining Chair (with fabric)", price:9, kg:7 },
-  { cat:"Kitchen & Dining", name:"Kitchen Unit / Cupboard", price:20, kg:25 },
-  { cat:"Kitchen & Dining", name:"Larder Cupboard", price:40, kg:35 },
-  { cat:"Kitchen & Dining", name:"Stool (small, no fabric)", price:5, kg:4 },
-  { cat:"Kitchen & Dining", name:"Kitchen Worktop", price:25, kg:30 },
-  { cat:"Kitchen & Dining", name:"Oven (integrated)", price:20, kg:30 },
-  { cat:"Kitchen & Dining", name:"Cooker Stove (freestanding up to 60cm wide)", price:35, kg:55 },
-  { cat:"Kitchen & Dining", name:"Microwave", price:5, kg:12 },
-  { cat:"Kitchen & Dining", name:"Air Fryer", price:4, kg:5 },
-  { cat:"Kitchen & Dining", name:"Small Appliance (kettle / toaster / similar)", price:4, kg:4 },
-  { cat:"Kitchen & Dining", name:"Range Cooker", price:100, kg:80 },
+  { cat:"Kitchen & Dining", name:"Dining Table (4 person, not inc glass or marble)", price:36, kg:40 },
+  { cat:"Kitchen & Dining", name:"Dining Table (4 person, glass or marble top)", price:60, kg:60 },
+  { cat:"Kitchen & Dining", name:"Dining Table (6 person, not inc glass or marble)", price:48, kg:55 },
+  { cat:"Kitchen & Dining", name:"Dining Table (6 person, glass or marble top)", price:72, kg:80 },
+  { cat:"Kitchen & Dining", name:"Dining Table (8 person, not inc glass or marble)", price:60, kg:70 },
+  { cat:"Kitchen & Dining", name:"Dining Table (8 person, glass or marble top)", price:84, kg:100 },
+  { cat:"Kitchen & Dining", name:"Dining Chair (no fabric)", price:6, kg:5 },
+  { cat:"Kitchen & Dining", name:"Dining Chair (with fabric)", price:11, kg:7 },
+  { cat:"Kitchen & Dining", name:"Kitchen Unit / Cupboard", price:24, kg:25 },
+  { cat:"Kitchen & Dining", name:"Larder Cupboard", price:48, kg:35 },
+  { cat:"Kitchen & Dining", name:"Stool (small, no fabric)", price:6, kg:4 },
+  { cat:"Kitchen & Dining", name:"Kitchen Worktop", price:30, kg:30 },
+  { cat:"Kitchen & Dining", name:"Oven (integrated)", price:24, kg:30 },
+  { cat:"Kitchen & Dining", name:"Cooker Stove (freestanding up to 60cm wide)", price:42, kg:55 },
+  { cat:"Kitchen & Dining", name:"Microwave", price:6, kg:12 },
+  { cat:"Kitchen & Dining", name:"Air Fryer", price:5, kg:5 },
+  { cat:"Kitchen & Dining", name:"Small Appliance (kettle / toaster / similar)", price:5, kg:4 },
+  { cat:"Kitchen & Dining", name:"Range Cooker", price:120, kg:80 },
 
   // Fridges & Freezers
-  { cat:"Fridges & Freezers", name:"Under-Counter Fridge or Freezer", price:60, kg:40 },
-  { cat:"Fridges & Freezers", name:"Fridge-Freezer (tall)", price:80, kg:65 },
-  { cat:"Fridges & Freezers", name:"Chest Freezer (up to 60cm wide)", price:60, kg:50 },
-  { cat:"Fridges & Freezers", name:"Chest Freezer (up to 120cm wide)", price:80, kg:75 },
-  { cat:"Fridges & Freezers", name:"American Fridge Freezer", price:120, kg:100 },
-  { cat:"Fridges & Freezers", name:"Commercial Fridge / Freezer (glass front or other refrigerants)", price:250, kg:150 },
+  { cat:"Fridges & Freezers", name:"Under-Counter Fridge or Freezer", price:72, kg:40 },
+  { cat:"Fridges & Freezers", name:"Fridge-Freezer (tall)", price:96, kg:65 },
+  { cat:"Fridges & Freezers", name:"Chest Freezer (up to 60cm wide)", price:72, kg:50 },
+  { cat:"Fridges & Freezers", name:"Chest Freezer (up to 120cm wide)", price:96, kg:75 },
+  { cat:"Fridges & Freezers", name:"American Fridge Freezer", price:144, kg:100 },
+  { cat:"Fridges & Freezers", name:"Commercial Fridge / Freezer (glass front or other refrigerants)", price:300, kg:150 },
 
   // Appliances
-  { cat:"Appliances", name:"Air Conditioning Unit", price:80, kg:25 },
-  { cat:"Appliances", name:"Dishwasher (domestic)", price:35, kg:45 },
-  { cat:"Appliances", name:"Washing Machine (domestic)", price:35, kg:70 },
-  { cat:"Appliances", name:"Tumble Dryer (domestic)", price:30, kg:35 },
-  { cat:"Appliances", name:"Washer-Dryer", price:35, kg:75 },
-  { cat:"Appliances", name:"Extractor Fan / Hood", price:15, kg:8 },
-  { cat:"Appliances", name:"Vacuum Cleaner", price:5, kg:6 },
-  { cat:"Appliances", name:"Carpet Cleaner", price:6, kg:10 },
-  { cat:"Appliances", name:"Lamp", price:5, kg:3 },
-  { cat:"Appliances", name:"Radiator (panel)", price:12, kg:15 },
-  { cat:"Appliances", name:"Radiator (cast iron)", price:20, kg:40 },
+  { cat:"Appliances", name:"Air Conditioning Unit", price:96, kg:25 },
+  { cat:"Appliances", name:"Dishwasher (domestic)", price:42, kg:45 },
+  { cat:"Appliances", name:"Washing Machine (domestic)", price:42, kg:70 },
+  { cat:"Appliances", name:"Tumble Dryer (domestic)", price:36, kg:35 },
+  { cat:"Appliances", name:"Washer-Dryer", price:42, kg:75 },
+  { cat:"Appliances", name:"Extractor Fan / Hood", price:18, kg:8 },
+  { cat:"Appliances", name:"Vacuum Cleaner", price:6, kg:6 },
+  { cat:"Appliances", name:"Carpet Cleaner", price:7, kg:10 },
+  { cat:"Appliances", name:"Lamp", price:6, kg:3 },
+  { cat:"Appliances", name:"Radiator (panel)", price:14, kg:15 },
+  { cat:"Appliances", name:"Radiator (cast iron)", price:24, kg:40 },
 
   // Bathroom
-  { cat:"Bathroom", name:"Toilet", price:25, kg:25 },
-  { cat:"Bathroom", name:"Sink", price:20, kg:15 },
-  { cat:"Bathroom", name:"Bathtub", price:35, kg:60 },
-  { cat:"Bathroom", name:"Shower Tray / Enclosure", price:30, kg:20 },
-  { cat:"Bathroom", name:"Bathroom Cabinet", price:20, kg:8 },
-  { cat:"Bathroom", name:"Towel Rail", price:10, kg:3 },
-  { cat:"Bathroom", name:"Bathroom Mirror", price:10, kg:5 },
+  { cat:"Bathroom", name:"Toilet", price:30, kg:25 },
+  { cat:"Bathroom", name:"Sink", price:24, kg:15 },
+  { cat:"Bathroom", name:"Bathtub", price:42, kg:60 },
+  { cat:"Bathroom", name:"Shower Tray / Enclosure", price:36, kg:20 },
+  { cat:"Bathroom", name:"Bathroom Cabinet", price:24, kg:8 },
+  { cat:"Bathroom", name:"Towel Rail", price:12, kg:3 },
+  { cat:"Bathroom", name:"Bathroom Mirror", price:12, kg:5 },
 
   // Soft Furnishings
-  { cat:"Soft Furnishings", name:"Carpet (per room)", price:25, kg:30 },
-  { cat:"Soft Furnishings", name:"Underlay (per room)", price:15, kg:10 },
-  { cat:"Soft Furnishings", name:"Cushions / Textiles (bundle)", price:8, kg:3 },
-  { cat:"Soft Furnishings", name:"Duvet / Bedding (bundle)", price:8, kg:3 },
+  { cat:"Soft Furnishings", name:"Carpet (per room)", price:30, kg:30 },
+  { cat:"Soft Furnishings", name:"Underlay (per room)", price:18, kg:10 },
+  { cat:"Soft Furnishings", name:"Cushions / Textiles (bundle)", price:10, kg:3 },
+  { cat:"Soft Furnishings", name:"Duvet / Bedding (bundle)", price:10, kg:3 },
 
   // Office & Study
-  { cat:"Office & Study", name:"Desk (domestic)", price:30, kg:25 },
-  { cat:"Office & Study", name:"Desk (commercial)", price:40, kg:35 },
-  { cat:"Office & Study", name:"Office Chair (no fabric)", price:6, kg:10 },
-  { cat:"Office & Study", name:"Office Chair (fabric)", price:15, kg:12 },
-  { cat:"Office & Study", name:"Gaming Chair", price:35, kg:15 },
-  { cat:"Office & Study", name:"Filing Cabinet (2-drawer)", price:20, kg:25 },
-  { cat:"Office & Study", name:"Filing Cabinet (4-drawer)", price:30, kg:45 },
-  { cat:"Office & Study", name:"Shelving Unit", price:20, kg:20 },
-  { cat:"Office & Study", name:"Desktop PC (tower only)", price:5, kg:8 },
-  { cat:"Office & Study", name:"Desktop PC (with monitor)", price:27, kg:15 },
-  { cat:"Office & Study", name:"Printer / Photocopier (large commercial)", price:40, kg:30 },
-  { cat:"Office & Study", name:"Projector Screen", price:12.50, kg:8 },
+  { cat:"Office & Study", name:"Desk (domestic)", price:36, kg:25 },
+  { cat:"Office & Study", name:"Desk (commercial)", price:48, kg:35 },
+  { cat:"Office & Study", name:"Office Chair (no fabric)", price:7, kg:10 },
+  { cat:"Office & Study", name:"Office Chair (fabric)", price:18, kg:12 },
+  { cat:"Office & Study", name:"Gaming Chair", price:42, kg:15 },
+  { cat:"Office & Study", name:"Filing Cabinet (2-drawer)", price:24, kg:25 },
+  { cat:"Office & Study", name:"Filing Cabinet (4-drawer)", price:36, kg:45 },
+  { cat:"Office & Study", name:"Shelving Unit", price:24, kg:20 },
+  { cat:"Office & Study", name:"Desktop PC (tower only)", price:6, kg:8 },
+  { cat:"Office & Study", name:"Desktop PC (with monitor)", price:32, kg:15 },
+  { cat:"Office & Study", name:"Printer / Photocopier (large commercial)", price:48, kg:30 },
+  { cat:"Office & Study", name:"Projector Screen", price:15, kg:8 },
 
   // Technology
-  { cat:"Technology", name:"Speaker / Soundbar", price:10, kg:5 },
-  { cat:"Technology", name:"Stereo / Hi-Fi", price:15, kg:10 },
-  { cat:"Technology", name:"Laptop", price:8, kg:2 },
-  { cat:"Technology", name:"Monitor", price:10, kg:5 },
-  { cat:"Technology", name:"Games Console", price:8, kg:2 },
-  { cat:"Technology", name:"Printer (home/small office)", price:10, kg:6 },
+  { cat:"Technology", name:"Speaker / Soundbar", price:12, kg:5 },
+  { cat:"Technology", name:"Stereo / Hi-Fi", price:18, kg:10 },
+  { cat:"Technology", name:"Laptop", price:10, kg:2 },
+  { cat:"Technology", name:"Monitor", price:12, kg:5 },
+  { cat:"Technology", name:"Games Console", price:10, kg:2 },
+  { cat:"Technology", name:"Printer (home/small office)", price:12, kg:6 },
 
   // Instruments & Music
-  { cat:"Instruments & Music", name:"Keyboard (light electric piano)", price:5, kg:8 },
-  { cat:"Instruments & Music", name:"Electric Organ (up to 100kg)", price:95, kg:100 },
-  { cat:"Instruments & Music", name:"Upright Piano (call for larger sizes)", price:210, kg:250 },
-  { cat:"Instruments & Music", name:"Drum Kit", price:25, kg:25 },
-  { cat:"Instruments & Music", name:"Guitar", price:9, kg:4 },
-  { cat:"Instruments & Music", name:"Violin", price:5, kg:2 },
-  { cat:"Instruments & Music", name:"Cello", price:20, kg:5 },
-  { cat:"Instruments & Music", name:"Flute", price:4, kg:1 },
-  { cat:"Instruments & Music", name:"Piano Stool", price:6, kg:5 },
+  { cat:"Instruments & Music", name:"Keyboard (light electric piano)", price:6, kg:8 },
+  { cat:"Instruments & Music", name:"Electric Organ (up to 100kg)", price:114, kg:100 },
+  { cat:"Instruments & Music", name:"Upright Piano (call for larger sizes)", price:252, kg:250 },
+  { cat:"Instruments & Music", name:"Drum Kit", price:30, kg:25 },
+  { cat:"Instruments & Music", name:"Guitar", price:11, kg:4 },
+  { cat:"Instruments & Music", name:"Violin", price:6, kg:2 },
+  { cat:"Instruments & Music", name:"Cello", price:24, kg:5 },
+  { cat:"Instruments & Music", name:"Flute", price:5, kg:1 },
+  { cat:"Instruments & Music", name:"Piano Stool", price:7, kg:5 },
 
   // Garden & DIY
-  { cat:"Garden & DIY", name:"Garden Sofa Set (3 items - plastic/light)", price:40, kg:35 },
-  { cat:"Garden & DIY", name:"Garden Table (4 seater)", price:20, kg:20 },
-  { cat:"Garden & DIY", name:"Garden Table (6 seater)", price:25, kg:30 },
-  { cat:"Garden & DIY", name:"Garden Chairs", price:5, kg:5 },
-  { cat:"Garden & DIY", name:"Garden Bench", price:25, kg:25 },
-  { cat:"Garden & DIY", name:"Picnic Bench", price:25, kg:30 },
-  { cat:"Garden & DIY", name:"Sun Lounger", price:12, kg:8 },
-  { cat:"Garden & DIY", name:"Egg Chair (garden furniture)", price:25, kg:20 },
-  { cat:"Garden & DIY", name:"Parasol", price:5, kg:5 },
-  { cat:"Garden & DIY", name:"BBQ", price:20, kg:20 },
-  { cat:"Garden & DIY", name:"Chiminea", price:12.50, kg:15 },
-  { cat:"Garden & DIY", name:"Fire Pit (small)", price:15, kg:8 },
-  { cat:"Garden & DIY", name:"Fire Pit (large)", price:25, kg:20 },
-  { cat:"Garden & DIY", name:"Hot Tub (inflatable inc pump etc)", price:80, kg:30 },
-  { cat:"Garden & DIY", name:"Hot Tub (heavy solid - inc dismantling)", price:600, kg:350 },
-  { cat:"Garden & DIY", name:"Shed - Standard (up to 6x4ft - including dismantling)", price:250, kg:150 },
-  { cat:"Garden & DIY", name:"Shed - Large (up to 8x6ft - including dismantling)", price:320, kg:200 },
-  { cat:"Garden & DIY", name:"Shed - Extra Large (up to 10x8ft - including dismantling)", price:400, kg:250 },
+  { cat:"Garden & DIY", name:"Garden Sofa Set (3 items - plastic/light)", price:48, kg:35 },
+  { cat:"Garden & DIY", name:"Garden Table (4 seater)", price:24, kg:20 },
+  { cat:"Garden & DIY", name:"Garden Table (6 seater)", price:30, kg:30 },
+  { cat:"Garden & DIY", name:"Garden Chairs", price:6, kg:5 },
+  { cat:"Garden & DIY", name:"Garden Bench", price:30, kg:25 },
+  { cat:"Garden & DIY", name:"Picnic Bench", price:30, kg:30 },
+  { cat:"Garden & DIY", name:"Sun Lounger", price:14, kg:8 },
+  { cat:"Garden & DIY", name:"Egg Chair (garden furniture)", price:30, kg:20 },
+  { cat:"Garden & DIY", name:"Parasol", price:6, kg:5 },
+  { cat:"Garden & DIY", name:"BBQ", price:24, kg:20 },
+  { cat:"Garden & DIY", name:"Chiminea", price:15, kg:15 },
+  { cat:"Garden & DIY", name:"Fire Pit (small)", price:18, kg:8 },
+  { cat:"Garden & DIY", name:"Fire Pit (large)", price:30, kg:20 },
+  { cat:"Garden & DIY", name:"Hot Tub (inflatable inc pump etc)", price:96, kg:30 },
+  { cat:"Garden & DIY", name:"Hot Tub (heavy solid - inc dismantling)", price:720, kg:350 },
+  { cat:"Garden & DIY", name:"Shed - Standard (up to 6x4ft - including dismantling)", price:300, kg:150 },
+  { cat:"Garden & DIY", name:"Shed - Large (up to 8x6ft - including dismantling)", price:384, kg:200 },
+  { cat:"Garden & DIY", name:"Shed - Extra Large (up to 10x8ft - including dismantling)", price:480, kg:250 },
   { cat:"Garden & DIY", name:"Larger Shed / Wooden Outbuilding", price:"Call for Quote", kg:300 },
   { cat:"Garden & DIY", name:"Brick / Concrete Garage", price:"Call for Quote", kg:500 },
   { cat:"Garden & DIY", name:"Summerhouse", price:"Call for Quote", kg:300 },
-  { cat:"Garden & DIY", name:"Greenhouse (dismantled)", price:100, kg:45 },
-  { cat:"Garden & DIY", name:"Trampoline (inc dismantling)", price:50, kg:45 },
-  { cat:"Garden & DIY", name:"Swing-Set (metal)", price:20, kg:20 },
-  { cat:"Garden & DIY", name:"Swing-Set (wooden)", price:50, kg:35 },
-  { cat:"Garden & DIY", name:"Slide", price:15, kg:12 },
-  { cat:"Garden & DIY", name:"Wendy House (plastic)", price:25, kg:15 },
-  { cat:"Garden & DIY", name:"Wendy House (wooden - small)", price:200, kg:80 },
-  { cat:"Garden & DIY", name:"Wendy House (wooden - large)", price:300, kg:150 },
-  { cat:"Garden & DIY", name:"Sand Pit (without sand)", price:20, kg:5 },
-  { cat:"Garden & DIY", name:"Lawnmower", price:10, kg:20 },
-  { cat:"Garden & DIY", name:"Strimmer / Leaf Blower", price:10, kg:5 },
-  { cat:"Garden & DIY", name:"Plant Pot (empty)", price:5, kg:3 },
-  { cat:"Garden & DIY", name:"Plant Pot (full)", price:10, kg:15 },
+  { cat:"Garden & DIY", name:"Greenhouse (dismantled)", price:120, kg:45 },
+  { cat:"Garden & DIY", name:"Trampoline (inc dismantling)", price:60, kg:45 },
+  { cat:"Garden & DIY", name:"Swing-Set (metal)", price:24, kg:20 },
+  { cat:"Garden & DIY", name:"Swing-Set (wooden)", price:60, kg:35 },
+  { cat:"Garden & DIY", name:"Slide", price:18, kg:12 },
+  { cat:"Garden & DIY", name:"Wendy House (plastic)", price:30, kg:15 },
+  { cat:"Garden & DIY", name:"Wendy House (wooden - small)", price:240, kg:80 },
+  { cat:"Garden & DIY", name:"Wendy House (wooden - large)", price:360, kg:150 },
+  { cat:"Garden & DIY", name:"Sand Pit (without sand)", price:24, kg:5 },
+  { cat:"Garden & DIY", name:"Lawnmower", price:12, kg:20 },
+  { cat:"Garden & DIY", name:"Strimmer / Leaf Blower", price:12, kg:5 },
+  { cat:"Garden & DIY", name:"Plant Pot (empty)", price:6, kg:3 },
+  { cat:"Garden & DIY", name:"Plant Pot (full)", price:12, kg:15 },
   { cat:"Garden & DIY", name:"Plant Pot (extra large, full)", price:"Call for Quote", kg:50 },
-  { cat:"Garden & DIY", name:"Garden Waste (bin bag - leaves/grass)", price:10, kg:15 },
-  { cat:"Garden & DIY", name:"Water Butt", price:15, kg:8 },
-  { cat:"Garden & DIY", name:"Decking Board (per board)", price:3, kg:3 },
-  { cat:"Garden & DIY", name:"Fence Panel (per panel)", price:10, kg:20 },
-  { cat:"Garden & DIY", name:"Patio Slab (small, per slab)", price:5, kg:15 },
-  { cat:"Garden & DIY", name:"Patio Slab (large, per slab)", price:20, kg:40 },
-  { cat:"Garden & DIY", name:"Concrete / Rubble (bag)", price:15, kg:25 },
-  { cat:"Garden & DIY", name:"Soil / Turf (bag)", price:15, kg:20 },
-  { cat:"Garden & DIY", name:"Gate / Railing (section)", price:15, kg:20 },
-  { cat:"Garden & DIY", name:"Plasterboard (bin bag size, per bag)", price:15, kg:10 },
-  { cat:"Garden & DIY", name:"Plasterboard Sheet (per sheet)", price:15, kg:8 },
-  { cat:"Garden & DIY", name:"Ladder - Metal (small)", price:10, kg:8 },
-  { cat:"Garden & DIY", name:"Ladder - Metal (large)", price:15, kg:14 },
-  { cat:"Garden & DIY", name:"Ladder - Wooden (small)", price:10, kg:6 },
-  { cat:"Garden & DIY", name:"Ladder - Wooden (large)", price:15, kg:10 },
-  { cat:"Garden & DIY", name:"Workbench", price:50, kg:20 },
-  { cat:"Garden & DIY", name:"Power Tools (per item)", price:5, kg:3 },
-  { cat:"Garden & DIY", name:"Roof Box (car)", price:20, kg:15 },
+  { cat:"Garden & DIY", name:"Garden Waste (bin bag - leaves/grass)", price:12, kg:15 },
+  { cat:"Garden & DIY", name:"Water Butt", price:18, kg:8 },
+  { cat:"Garden & DIY", name:"Decking Board (per board)", price:4, kg:3 },
+  { cat:"Garden & DIY", name:"Fence Panel (per panel)", price:12, kg:20 },
+  { cat:"Garden & DIY", name:"Patio Slab (small, per slab)", price:6, kg:15 },
+  { cat:"Garden & DIY", name:"Patio Slab (large, per slab)", price:24, kg:40 },
+  { cat:"Garden & DIY", name:"Concrete / Rubble (bag)", price:18, kg:25 },
+  { cat:"Garden & DIY", name:"Soil / Turf (bag)", price:18, kg:20 },
+  { cat:"Garden & DIY", name:"Gate / Railing (section)", price:18, kg:20 },
+  { cat:"Garden & DIY", name:"Plasterboard (bin bag size, per bag)", price:18, kg:10 },
+  { cat:"Garden & DIY", name:"Plasterboard Sheet (per sheet)", price:18, kg:8 },
+  { cat:"Garden & DIY", name:"Ladder - Metal (small)", price:12, kg:8 },
+  { cat:"Garden & DIY", name:"Ladder - Metal (large)", price:18, kg:14 },
+  { cat:"Garden & DIY", name:"Ladder - Wooden (small)", price:12, kg:6 },
+  { cat:"Garden & DIY", name:"Ladder - Wooden (large)", price:18, kg:10 },
+  { cat:"Garden & DIY", name:"Workbench", price:60, kg:20 },
+  { cat:"Garden & DIY", name:"Power Tools (per item)", price:6, kg:3 },
+  { cat:"Garden & DIY", name:"Roof Box (car)", price:24, kg:15 },
 
   // Sports & Leisure
-  { cat:"Sports & Leisure", name:"Snooker / Billiards Table (full size slate bed up to 12ft)", price:450, kg:400 },
-  { cat:"Sports & Leisure", name:"Pool / Snooker Table (small & light)", price:35, kg:60 },
-  { cat:"Sports & Leisure", name:"Golf Clubs (inc bag)", price:9, kg:10 },
-  { cat:"Sports & Leisure", name:"Exercise Bike", price:19, kg:25 },
-  { cat:"Sports & Leisure", name:"Cross Trainer", price:60, kg:50 },
-  { cat:"Sports & Leisure", name:"Treadmill", price:60, kg:80 },
-  { cat:"Sports & Leisure", name:"Rowing Machine", price:60, kg:35 },
-  { cat:"Sports & Leisure", name:"Exercise Equipment - Small (weights, bars etc)", price:20, kg:15 },
-  { cat:"Sports & Leisure", name:"Exercise Equipment - Large (multi-gym etc)", price:40, kg:50 },
-  { cat:"Sports & Leisure", name:"Bicycle or Tricycle", price:5, kg:12 },
-  { cat:"Sports & Leisure", name:"Scooter (2 wheel child-size)", price:4, kg:3 },
-  { cat:"Sports & Leisure", name:"Scooter (electric 2 wheel)", price:15, kg:12 },
-  { cat:"Sports & Leisure", name:"Ride on Toys (outdoor karts & electric cars)", price:24, kg:15 },
-  { cat:"Sports & Leisure", name:"Electric Scooter / E-Scooter", price:20, kg:15 },
-  { cat:"Sports & Leisure", name:"Electric Bike (e-bike)", price:25, kg:25 },
-  { cat:"Sports & Leisure", name:"Kayak / Canoe", price:25, kg:20 },
-  { cat:"Sports & Leisure", name:"Paddleboard (SUP)", price:20, kg:12 },
-  { cat:"Sports & Leisure", name:"Weight Bench", price:25, kg:30 },
+  { cat:"Sports & Leisure", name:"Snooker / Billiards Table (full size slate bed up to 12ft)", price:540, kg:400 },
+  { cat:"Sports & Leisure", name:"Pool / Snooker Table (small & light)", price:42, kg:60 },
+  { cat:"Sports & Leisure", name:"Golf Clubs (inc bag)", price:11, kg:10 },
+  { cat:"Sports & Leisure", name:"Exercise Bike", price:23, kg:25 },
+  { cat:"Sports & Leisure", name:"Cross Trainer", price:72, kg:50 },
+  { cat:"Sports & Leisure", name:"Treadmill", price:72, kg:80 },
+  { cat:"Sports & Leisure", name:"Rowing Machine", price:72, kg:35 },
+  { cat:"Sports & Leisure", name:"Exercise Equipment - Small (weights, bars etc)", price:24, kg:15 },
+  { cat:"Sports & Leisure", name:"Exercise Equipment - Large (multi-gym etc)", price:48, kg:50 },
+  { cat:"Sports & Leisure", name:"Bicycle or Tricycle", price:6, kg:12 },
+  { cat:"Sports & Leisure", name:"Scooter (2 wheel child-size)", price:5, kg:3 },
+  { cat:"Sports & Leisure", name:"Scooter (electric 2 wheel)", price:18, kg:12 },
+  { cat:"Sports & Leisure", name:"Ride on Toys (outdoor karts & electric cars)", price:29, kg:15 },
+  { cat:"Sports & Leisure", name:"Electric Scooter / E-Scooter", price:24, kg:15 },
+  { cat:"Sports & Leisure", name:"Electric Bike (e-bike)", price:30, kg:25 },
+  { cat:"Sports & Leisure", name:"Kayak / Canoe", price:30, kg:20 },
+  { cat:"Sports & Leisure", name:"Paddleboard (SUP)", price:24, kg:12 },
+  { cat:"Sports & Leisure", name:"Weight Bench", price:30, kg:30 },
 
   // Games & Toys
-  { cat:"Games & Toys", name:"Rocking Horse", price:12, kg:8 },
-  { cat:"Games & Toys", name:"Kids Toys (box)", price:8, kg:10 },
+  { cat:"Games & Toys", name:"Rocking Horse", price:14, kg:8 },
+  { cat:"Games & Toys", name:"Kids Toys (box)", price:10, kg:10 },
 
   // Baby & Nursery
-  { cat:"Baby & Nursery", name:"Cot", price:25, kg:12 },
-  { cat:"Baby & Nursery", name:"Cot Mattress", price:10, kg:5 },
-  { cat:"Baby & Nursery", name:"Travel Cot / Playpen", price:14, kg:8 },
-  { cat:"Baby & Nursery", name:"Baby Changing Unit", price:35, kg:15 },
-  { cat:"Baby & Nursery", name:"Baby Bouncer / Rocker", price:8, kg:4 },
-  { cat:"Baby & Nursery", name:"Car Seat (baby & child)", price:9, kg:5 },
-  { cat:"Baby & Nursery", name:"Safety Gate (stair gate)", price:4, kg:2 },
-  { cat:"Baby & Nursery", name:"Kids Wardrobe / Furniture", price:25, kg:30 },
+  { cat:"Baby & Nursery", name:"Cot", price:30, kg:12 },
+  { cat:"Baby & Nursery", name:"Cot Mattress", price:12, kg:5 },
+  { cat:"Baby & Nursery", name:"Travel Cot / Playpen", price:17, kg:8 },
+  { cat:"Baby & Nursery", name:"Baby Changing Unit", price:42, kg:15 },
+  { cat:"Baby & Nursery", name:"Baby Bouncer / Rocker", price:10, kg:4 },
+  { cat:"Baby & Nursery", name:"Car Seat (baby & child)", price:11, kg:5 },
+  { cat:"Baby & Nursery", name:"Safety Gate (stair gate)", price:5, kg:2 },
+  { cat:"Baby & Nursery", name:"Kids Wardrobe / Furniture", price:30, kg:30 },
 
   // Pets
-  { cat:"Pet Accessories", name:"Dog Cage", price:9, kg:10 },
-  { cat:"Pet Accessories", name:"Dog Bed (large)", price:6, kg:5 },
-  { cat:"Pet Accessories", name:"Dog Bed (small-medium)", price:4, kg:3 },
-  { cat:"Pet Accessories", name:"Kennel / Dog Run", price:30, kg:25 },
-  { cat:"Pet Accessories", name:"Cat / Rabbit Hutch (small)", price:10, kg:8 },
-  { cat:"Pet Accessories", name:"Cat / Rabbit Hutch (large)", price:20, kg:15 },
+  { cat:"Pet Accessories", name:"Dog Cage", price:11, kg:10 },
+  { cat:"Pet Accessories", name:"Dog Bed (large)", price:7, kg:5 },
+  { cat:"Pet Accessories", name:"Dog Bed (small-medium)", price:5, kg:3 },
+  { cat:"Pet Accessories", name:"Kennel / Dog Run", price:36, kg:25 },
+  { cat:"Pet Accessories", name:"Cat / Rabbit Hutch (small)", price:12, kg:8 },
+  { cat:"Pet Accessories", name:"Cat / Rabbit Hutch (large)", price:24, kg:15 },
 
   // Mobility & Medical
-  { cat:"Mobility & Medical", name:"Wheelchair (non-motorised)", price:12, kg:15 },
-  { cat:"Mobility & Medical", name:"Wheelchair (motorised)", price:24, kg:40 },
-  { cat:"Mobility & Medical", name:"Mobility Scooter", price:30, kg:50 },
-  { cat:"Mobility & Medical", name:"Hospital Bed (without mattress)", price:65, kg:60 },
-  { cat:"Mobility & Medical", name:"Hospital Bed (with mattress)", price:95, kg:80 },
-  { cat:"Baby & Nursery", name:"Push Chair / Pram / Stroller", price:12.50, kg:10 },
+  { cat:"Mobility & Medical", name:"Wheelchair (non-motorised)", price:14, kg:15 },
+  { cat:"Mobility & Medical", name:"Wheelchair (motorised)", price:29, kg:40 },
+  { cat:"Mobility & Medical", name:"Mobility Scooter", price:36, kg:50 },
+  { cat:"Mobility & Medical", name:"Hospital Bed (without mattress)", price:78, kg:60 },
+  { cat:"Mobility & Medical", name:"Hospital Bed (with mattress)", price:114, kg:80 },
+  { cat:"Baby & Nursery", name:"Push Chair / Pram / Stroller", price:15, kg:10 },
 
   // Garage & Clearance
-  { cat:"Garage & Clearance", name:"Collection Fee", price:25, kg:0 },
   { cat:"Garage & Clearance", name:"Garage Contents (full clearance)", price:"Assess Photographs", kg:200 },
   { cat:"Garage & Clearance", name:"Loft / Attic Contents (full clearance)", price:"Assess Photographs", kg:150 },
   { cat:"Garage & Clearance", name:"Cellar / Basement Contents (full clearance)", price:"Assess Photographs", kg:150 },
   { cat:"Garage & Clearance", name:"Shed Contents", price:"Assess Photographs", kg:60 },
-  { cat:"Garage & Clearance", name:"Tool Chest / Cabinet", price:25, kg:35 },
-  { cat:"Garage & Clearance", name:"Tyre (each)", price:8, kg:8 },
-  { cat:"Garage & Clearance", name:"Black Bin Bag (per bag, no food/feces)", price:3, kg:8 },
-  { cat:"Garage & Clearance", name:"Pallet (120x100x220cm)", price:4, kg:25 },
-  { cat:"Garage & Clearance", name:"Plastic Storage Tub / Box", price:5, kg:5 },
-  { cat:"Garage & Clearance", name:"Timber / Wood Offcuts (bundle)", price:10, kg:20 },
-  { cat:"Garage & Clearance", name:"Box (small)", price:5, kg:8 },
-  { cat:"Garage & Clearance", name:"Box (medium)", price:8, kg:15 },
-  { cat:"Garage & Clearance", name:"Box (large)", price:10, kg:20 },
-  { cat:"Garage & Clearance", name:"Books (per box)", price:8, kg:20 },
-  { cat:"Garage & Clearance", name:"Archive / Filing Box", price:5, kg:10 },
-  { cat:"Garage & Clearance", name:"General Clutter (per box)", price:8, kg:12 },
-  { cat:"Garage & Clearance", name:"Bag of Clothing / Textiles", price:5, kg:5 },
-  { cat:"Garage & Clearance", name:"Suitcase / Large Bag", price:5, kg:5 },
-  { cat:"Garage & Clearance", name:"Safe (small)", price:30, kg:40 },
-  { cat:"Garage & Clearance", name:"Internal Door", price:10, kg:20 },
-  { cat:"Garage & Clearance", name:"Paint Tins (per 5)", price:10, kg:15 },
-  { cat:"Garage & Clearance", name:"Picture Frame", price:5, kg:2 },
-  { cat:"Garage & Clearance", name:"Painting / Canvas", price:8, kg:3 },
+  { cat:"Garage & Clearance", name:"Tool Chest / Cabinet", price:30, kg:35 },
+  { cat:"Garage & Clearance", name:"Tyre (each)", price:10, kg:8 },
+  { cat:"Garage & Clearance", name:"Black Bin Bag (per bag, no food/feces)", price:4, kg:8 },
+  { cat:"Garage & Clearance", name:"Pallet (120x100x220cm)", price:5, kg:25 },
+  { cat:"Garage & Clearance", name:"Plastic Storage Tub / Box", price:6, kg:5 },
+  { cat:"Garage & Clearance", name:"Timber / Wood Offcuts (bundle)", price:12, kg:20 },
+  { cat:"Garage & Clearance", name:"Box (small)", price:6, kg:8 },
+  { cat:"Garage & Clearance", name:"Box (medium)", price:10, kg:15 },
+  { cat:"Garage & Clearance", name:"Box (large)", price:12, kg:20 },
+  { cat:"Garage & Clearance", name:"Books (per box)", price:10, kg:20 },
+  { cat:"Garage & Clearance", name:"Archive / Filing Box", price:6, kg:10 },
+  { cat:"Garage & Clearance", name:"General Clutter (per box)", price:10, kg:12 },
+  { cat:"Garage & Clearance", name:"Bag of Clothing / Textiles", price:6, kg:5 },
+  { cat:"Garage & Clearance", name:"Suitcase / Large Bag", price:6, kg:5 },
+  { cat:"Garage & Clearance", name:"Safe (small)", price:36, kg:40 },
+  { cat:"Garage & Clearance", name:"Internal Door", price:12, kg:20 },
+  { cat:"Garage & Clearance", name:"Paint Tins (per 5)", price:12, kg:15 },
+  { cat:"Garage & Clearance", name:"Picture Frame", price:6, kg:2 },
+  { cat:"Garage & Clearance", name:"Painting / Canvas", price:10, kg:3 },
 
 ];
 
@@ -1221,7 +1220,7 @@ Return ONLY a JSON array. Each object must have:
 - "name": exact name from price list if matched, otherwise a clear descriptive name
 - "matched": true if matched to price list exactly, false if not
 - "qty": quantity as integer (look for numbers, x2, (x3) etc — default 1 if not specified)
-- "estimatedPrice": if not matched, estimate a fair UK house clearance price as a number. If matched use 0.
+- "estimatedPrice": if not matched, estimate a fair UK house clearance price INCLUDING 20% VAT, rounded to a whole pound, as a number. If matched use 0.
 - "kg": estimated weight in kg if not matched (if matched use 0)
 
 Be generous with matching — "sofa" should match "Sofa (3-seater)", "double bed" should match "Double Bed Frame", "zimmer" or "zimmer frame" should match wheelchair/mobility items, "commode" = mobility medical item ~£15. Include every item mentioned.`
@@ -1253,7 +1252,7 @@ Be generous with matching — "sofa" should match "Sofa (3-seater)", "double bed
         }
         if (preset) isMatched = true;
       }
-      const price = isMatched ? preset.price : (d.estimatedPrice || 5);
+      const price = isMatched ? preset.price : Math.round(d.estimatedPrice || 6);
       const kg = isMatched ? preset.kg : (d.kg || 0);
       for (let q = 0; q < (d.qty || 1); q++) {
         addItem(preset ? preset.name : d.name, price, kg, true);
@@ -1289,7 +1288,7 @@ function changeQty(id, d) {
 }
 function removeLine(id) { lines = lines.filter(l => l.id !== id); renderQuote(); }
 
-const BULKY_THRESHOLD = 25;
+const BULKY_THRESHOLD = 5;
 
 function lineHtml(l) {
   return `
@@ -1337,16 +1336,17 @@ function renderQuote() {
   c.innerHTML = html;
   const sub = lines.reduce((s,l) => s + l.price * l.qty, 0);
   const collection = 25;
-  const vat = (sub + collection) * 0.2;
+  const grand = sub + collection;
+  const vatPortion = grand / 6; // VAT element of a VAT-inclusive total
   const kg  = lines.reduce((s,l) => s + (l.kg||0) * l.qty, 0);
   document.getElementById('subtotal').textContent    = `£${sub.toFixed(2)}`;
-  document.getElementById('vatAmt').textContent      = `£${vat.toFixed(2)}`;
-  document.getElementById('grandTotal').textContent  = `£${(sub+collection+vat).toFixed(2)}`;
+  document.getElementById('vatAmt').textContent      = `£${vatPortion.toFixed(2)}`;
+  document.getElementById('grandTotal').textContent  = `£${grand.toFixed(2)}`;
   document.getElementById('totalWeight').textContent = `${kg} kg`;
   const st = document.getElementById('stickyItems');
   if (st) {
     st.textContent = count ? `${count} item${count!==1?'s':''} · ${kg}kg` : '0 items';
-    document.getElementById('stickyAmt').textContent = `£${(sub+collection+vat).toFixed(2)}`;
+    document.getElementById('stickyAmt').textContent = `£${grand.toFixed(2)}`;
   }
   updateLoadRec(kg);
 }
@@ -1528,7 +1528,7 @@ Return ONLY a JSON array. Each object must have:
 - "qty": exact count (integer)
 - "notes": condition, size, material or position
 - "confidence": "high" or "low"
-- "estimatedPrice": number, no symbol. If matched use 0. If not matched, estimate fair UK clearance price by size/weight/effort: small light items 2-5; medium 5-15; large/heavy 20-60.
+- "estimatedPrice": number, no symbol, INCLUDING 20% VAT rounded to a whole pound. If matched use 0. If not matched estimate by size/weight/effort: small light items 3-6; medium 6-18; large/heavy 24-72.
 - "kg": estimated weight in kg if NOT matched (use 0 if matched)
 
 Include every visible item. Do not merge or drop items.` }
@@ -1567,7 +1567,7 @@ Include every visible item. Do not merge or drop items.` }
         if (preset) isMatched = true;
       }
 
-      const price = isMatched ? preset.price : (d.estimatedPrice || 5);
+      const price = isMatched ? preset.price : Math.round(d.estimatedPrice || 6);
       return {
         id: scanItems.length + i,
         name: preset ? preset.name : d.name,
@@ -1666,7 +1666,7 @@ function closeScan() {
 <div class="toast" id="toast"><span class="tick">✓</span><span id="toastTxt"></span></div>
 <div class="sticky-total" id="stickyTotal" onclick="document.querySelector('.quote-panel').scrollIntoView({behavior:'smooth'})">
   <span class="sticky-total-items" id="stickyItems">0 items</span>
-  <span class="sticky-total-amt" id="stickyAmt">£30.00</span>
+  <span class="sticky-total-amt" id="stickyAmt">£25.00</span>
 </div>
 </body>
 </html>
