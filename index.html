@@ -1271,6 +1271,39 @@ async function saveCatalogue() {
   return true;
 }
 
+// Parse JSON, salvaging whatever is usable if the response was cut short
+function parseItemsJson(raw) {
+  const clean = String(raw || '').replace(/```json|```/g, '').trim();
+  try {
+    return JSON.parse(clean);
+  } catch (e) {
+    // Truncated — pull out every complete {...} object we can find
+    const items = [];
+    let depth = 0, start = -1, inStr = false, esc = false;
+    for (let i = 0; i < clean.length; i++) {
+      const c = clean[i];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (c === '\\') esc = true;
+        else if (c === '"') inStr = false;
+        continue;
+      }
+      if (c === '"') { inStr = true; continue; }
+      if (c === '{') { if (depth === 0) start = i; depth++; }
+      else if (c === '}') {
+        depth--;
+        if (depth === 0 && start >= 0) {
+          try { items.push(JSON.parse(clean.slice(start, i + 1))); } catch (e2) {}
+          start = -1;
+        }
+      }
+    }
+    if (!items.length) throw e;
+    console.warn('Response truncated — recovered ' + items.length + ' items');
+    return items;
+  }
+}
+
 // ════ RECOGNITION CORRECTIONS ════
 let corrections = [];
 
@@ -1490,7 +1523,7 @@ async function parseTextList() {
       headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-sonnet-5',
-        max_tokens: 2000,
+        max_tokens: 6000,
         messages: [{
           role: 'user',
           content: `You are building a house clearance quote. Parse this item list and match each item to our price list.
@@ -1515,7 +1548,7 @@ Be generous with matching — "sofa" should match "Sofa (3-seater)", "double bed
 
     const data = await response.json();
     const raw = data.content?.find(b => b.type === 'text')?.text || '[]';
-    const items = JSON.parse(raw.replace(/\`\`\`json|\`\`\`/g, '').trim());
+    const items = parseItemsJson(raw);
 
     let added = 0;
     items.forEach(d => {
@@ -2302,7 +2335,7 @@ async function handlePhoto(event, fileArg, multiMode) {
       headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-sonnet-5',
-        max_tokens: 3000,
+        max_tokens: 8000,
         messages: [{
           role: 'user',
           content: [
@@ -2317,6 +2350,12 @@ STEP 1 — Identify systematically:
 5. Items partially hidden, stacked, behind other items, or in the background
 
 Be specific about SIZE (2-seater vs 3-seater sofa, single vs double mattress, TV screen size). Count multiples accurately. Do not invent items you cannot see.
+
+KEEP THE LIST MANAGEABLE — group loose clutter:
+• List large or individually priceable items separately (furniture, appliances, electronics).
+• For piles of small loose material — cardboard, packaging, broken wood, offcuts, general rubbish, bags of bits — do NOT list each piece. Estimate how many bin bags or boxes it would fill and give ONE line, e.g. {"name":"General Clutter (per box)","qty":8}.
+• Combine identical small items into a single line with a quantity rather than repeating them.
+• Aim for at most 25 lines in total. If the scene is a large pile, prioritise the biggest and most valuable items, then summarise the rest as bagged clutter.
 
 CRITICAL — TELLING SIMILAR ITEMS APART:
 • Wardrobe vs fridge/freezer: a fridge has a rubber door seal, a compressor grille near the floor, usually one long vertical handle, and a metal or gloss plastic finish. A wardrobe has wood, veneer or painted panels, knobs or bar handles, often mirrored doors, sits flush to the floor with no grille, and is in a bedroom. Domestic kitchens do not contain commercial/industrial fridges — only assume commercial if it is clearly a glass-fronted display or catering unit.
@@ -2352,8 +2391,7 @@ Include every visible item. Do not merge or drop items.` }
     clearTimeout(timeout);
     const d2 = await resp.json();
     const text = d2.content?.find(b => b.type === 'text')?.text || '[]';
-    const clean = text.replace(/```json|```/g, '').trim();
-    const detected = JSON.parse(clean);
+    const detected = parseItemsJson(text);
 
     const newItems = detected.map((d, i) => {
       // First try exact match
