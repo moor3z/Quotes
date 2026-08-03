@@ -1355,26 +1355,14 @@ function parseItemsJson(raw) {
 }
 
 // ════ DISPOSAL COSTS ════
-// Tonnage rates, ex-VAT per tonne. "min" is the minimum charge for that stream.
-const WASTE_RATES = {
-  bulky:        { label: 'Bulky (furniture & mattresses)', rate: 195, min: 30 },
-  general:      { label: 'Commercial general',             rate: 175, min: 30 },
-  construction: { label: 'Mixed construction',             rate: 140, min: 30 },
-  roofing:      { label: 'Roofing (battens, felt)',        rate: 175, min: 30 },
-  gypsum:       { label: 'Gypsum / plasterboard',          rate: 130, min: 30 },
-  wood:         { label: 'Wood',                           rate: 85,  min: 30 },
-  green:        { label: 'Green waste',                    rate: 85,  min: 30 },
-  rubble:       { label: 'Clean rubble',                   rate: 25,  min: 25, minTonne: 1 },
-  soil:         { label: 'Soil',                           rate: 25,  min: 25, minTonne: 1 },
-  farmplastic:  { label: 'Farm plastics',                  rate: 185, min: 30 },
-  asbestos:     { label: 'Asbestos',                       rate: 500, min: 500, fee: 50 }
-};
+// Everything tipped is charged at the bulky waste rate. Fridges are charged per unit.
+const BULKY_RATE = 215;   // £ per tonne, ex VAT
+const OVERALL_MIN = 30;   // single minimum charge across the load, ex VAT
 
-// Items charged per unit rather than by weight. Checked before tonnage streams.
+// Items charged per unit rather than by weight
 const UNIT_DISPOSAL = [
   { test: /american|commercial fridge|commercial freezer|glass front/i, cost: 45, label: 'Fridges — American / commercial' },
-  { test: /fridge|freezer/i,                                            cost: 35, label: 'Fridges & freezers — domestic' },
-  { test: /\btv\b|television|washing machine|washer-dryer|tumble dryer|dishwasher|oven|cooker|microwave|monitor|computer|laptop|printer|console|stereo|speaker|hi-fi|soundbar|vacuum|kettle|toaster|air fryer|food processor|small appliance|extractor|dehumidifier|carpet cleaner/i, cost: 0, label: 'Electricals — no charge (scrap)' }
+  { test: /fridge|freezer/i,                                            cost: 35, label: 'Fridges & freezers — domestic' }
 ];
 
 function unitDisposalFor(name) {
@@ -1385,31 +1373,10 @@ function unitDisposalFor(name) {
   return null;
 }
 
-// Which tonnage stream an item belongs to
-function classifyWaste(name, cat) {
-  const n = (name || '').toLowerCase();
-  const c = (cat || '').toLowerCase();
-
-  if (n.includes('asbestos')) return 'asbestos';
-  if (/rubble|concrete|patio slab|brick|paving|hardcore|tile\b/.test(n)) return 'rubble';
-  if (/\bsoil\b|turf/.test(n)) return 'soil';
-  if (/plasterboard|gypsum/.test(n)) return 'gypsum';
-  if (/roofing|felt|batten/.test(n)) return 'roofing';
-  if (/farm plastic|silage/.test(n)) return 'farmplastic';
-  if (/garden waste|green waste|grass|leaves|hedge|plant pot|compost/.test(n)) return 'green';
-  if (/timber|decking|fence panel|wood offcut|wooden|plywood|pallet|shed|log\b|gate|summerhouse|greenhouse|workbench/.test(n)) return 'wood';
-  if (/kitchen unit|worktop|radiator|toilet|sink|bathtub|bath\b|shower|door|window|cupboard|larder|fireplace/.test(n)) return 'construction';
-  if (c.includes('bathroom')) return 'construction';
-  if (/sofa|armchair|mattress|bed\b|bed frame|wardrobe|chest of drawers|sideboard|dressing table|bookcase|cabinet|desk|chair|table|stool|cot\b|drawers|shelving|bench|lounger|recliner|pouffe|footstool|rug|carpet|curtain|cushion|duvet|bedding|pram|push chair|wheelchair|hospital bed|piano|organ|drum|snooker|pool table|treadmill|cross trainer|rowing machine|exercise bike|weight bench|trampoline|hot tub|swing|slide|sand pit|kennel|hutch|dog bed|safe\b/.test(n)) return 'bulky';
-  if (/lounge|bedroom|soft furnishings|office|baby|mobility/.test(c)) return 'bulky';
-
-  return 'general';
-}
-
-// Total disposal cost: per-unit charges plus tonnage streams
+// Total disposal cost: per-unit fridge charges plus everything else at the bulky rate
 function computeDisposal(lineItems) {
-  const streams = {};   // weight-based
-  const units = {};     // per-unit charges
+  const units = {};
+  let bulkyKg = 0;
 
   lineItems.forEach(l => {
     const rule = unitDisposalFor(l.name);
@@ -1417,67 +1384,36 @@ function computeDisposal(lineItems) {
       if (!units[rule.label]) units[rule.label] = { qty: 0, kg: 0, each: rule.cost };
       units[rule.label].qty += l.qty;
       units[rule.label].kg += (l.kg || 0) * l.qty;
-      return; // charged per unit, not by weight
+      return;
     }
-    const preset = PRESETS.find(p => p.name === l.name);
-    const key = classifyWaste(l.name, preset ? preset.cat : '');
-    const kg = (l.kg || 0) * l.qty;
-    if (!kg) return;
-    if (!streams[key]) streams[key] = { kg: 0 };
-    streams[key].kg += kg;
+    bulkyKg += (l.kg || 0) * l.qty;
   });
 
   let total = 0;
   const rows = [];
 
-  // Per-unit rows first
   Object.keys(units).forEach(label => {
     const u = units[label];
     const cost = u.qty * u.each;
     total += cost;
+    rows.push({ label: label, detail: u.qty + ' × £' + u.each, kg: Math.round(u.kg), cost: cost });
+  });
+
+  let bulkyCost = 0, minTopUp = 0;
+  if (bulkyKg > 0) {
+    bulkyCost = (bulkyKg / 1000) * BULKY_RATE;
+    if (bulkyCost < OVERALL_MIN) minTopUp = OVERALL_MIN - bulkyCost;
     rows.push({
-      label: label,
-      detail: u.qty + ' × £' + u.each,
-      kg: Math.round(u.kg),
-      cost: cost,
-      free: u.each === 0
+      label: 'Bulky Waste Rate',
+      detail: '£' + BULKY_RATE + '/t',
+      kg: Math.round(bulkyKg),
+      cost: bulkyCost
     });
-  });
-
-  // Tonnage rows — charged on weight, with ONE overall minimum applied at the end
-  let tonnageCost = 0;
-  const tonnageRows = [];
-  let extraFees = 0;
-
-  Object.keys(streams).forEach(key => {
-    const cfg = WASTE_RATES[key] || WASTE_RATES.general;
-    const kg = streams[key].kg;
-    let tonnes = kg / 1000;
-    if (cfg.minTonne) tonnes = Math.max(tonnes, cfg.minTonne); // rubble/soil: 1t minimum quantity
-    const cost = tonnes * cfg.rate;
-    tonnageCost += cost;
-    if (cfg.fee) extraFees += cfg.fee; // e.g. asbestos consignment note
-    tonnageRows.push({
-      label: cfg.label,
-      detail: '£' + cfg.rate + '/t',
-      kg: Math.round(kg),
-      cost: cost,
-      minTonneApplied: !!(cfg.minTonne && kg / 1000 < cfg.minTonne)
-    });
-  });
-
-  // Single overall minimum charge across the whole load
-  const OVERALL_MIN = 30;
-  let minTopUp = 0;
-  if (tonnageRows.length && tonnageCost < OVERALL_MIN) {
-    minTopUp = OVERALL_MIN - tonnageCost;
+    total += bulkyCost + minTopUp;
   }
 
-  tonnageRows.sort((a, b) => b.cost - a.cost);
-  rows.push(...tonnageRows);
-  total += tonnageCost + minTopUp + extraFees;
-
-  return { rows: rows, total: total, minTopUp: minTopUp, minCharge: OVERALL_MIN, extraFees: extraFees };
+  rows.sort((a, b) => b.cost - a.cost);
+  return { rows: rows, total: total, minTopUp: minTopUp, minCharge: OVERALL_MIN, extraFees: 0 };
 }
 
 // ════ RECOGNITION CORRECTIONS ════
@@ -2127,7 +2063,7 @@ function renderMargin() {
 
   let rowsHtml = d.rows.map(r => `
     <div class="m-stream">
-      <span class="m-stream-lbl">${r.label}${r.minTonneApplied ? '<span class="m-tag m-tag-min">1t min</span>' : ''}${r.free ? '<span class="m-tag m-tag-free">free</span>' : ''}</span>
+      <span class="m-stream-lbl">${r.label}</span>
       <span class="m-stream-kg">${r.detail || ''} · ${r.kg}kg</span>
       <span class="m-stream-cost">£${r.cost.toFixed(2)}</span>
     </div>`).join('');
@@ -2138,14 +2074,6 @@ function renderMargin() {
       <span class="m-stream-lbl">Minimum charge top-up<span class="m-tag m-tag-min">min £${d.minCharge}</span></span>
       <span class="m-stream-kg"></span>
       <span class="m-stream-cost">£${d.minTopUp.toFixed(2)}</span>
-    </div>`;
-  }
-  if (d.extraFees > 0) {
-    rowsHtml += `
-    <div class="m-stream">
-      <span class="m-stream-lbl">Consignment note fee</span>
-      <span class="m-stream-kg"></span>
-      <span class="m-stream-cost">£${d.extraFees.toFixed(2)}</span>
     </div>`;
   }
   document.getElementById('marginRows').innerHTML = rowsHtml;
