@@ -476,6 +476,24 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 .scan-error { color: #f87171; font-size: 13px; text-align: center; padding: 8px 0; }
 
 /* ════ MOBILE ════ */
+/* ════ SCAN CONFIDENCE & CORRECTION ════ */
+.scan-item.low-conf { border-color: rgba(251,191,36,0.45); background: rgba(251,191,36,0.05); }
+.conf-flag {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: rgba(251,191,36,0.2); color: #fbbf24;
+  font-size: 10px; font-weight: 700; margin-left: 5px; vertical-align: middle;
+}
+.scan-item-name { cursor: pointer; }
+.edit-hint { opacity: 0; color: var(--text3); font-size: 11px; margin-left: 5px; transition: opacity 0.15s; }
+.scan-item:hover .edit-hint { opacity: 0.7; }
+.name-edit-wrap { padding: 1px 0 3px; }
+.name-edit {
+  width: 100%; background: var(--card2); border: 1px solid var(--accent);
+  border-radius: 5px; color: var(--text); font-size: 13px; font-weight: 600;
+  padding: 6px 8px; outline: none;
+}
+
 /* ════ ADMIN TABS / DISCOVERED ════ */
 .admin-tabs { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
 .admin-tab {
@@ -1251,6 +1269,42 @@ async function saveCatalogue() {
   });
   if (!r.ok) throw new Error(r.status === 401 ? 'Wrong password' : 'Save failed');
   return true;
+}
+
+// ════ RECOGNITION CORRECTIONS ════
+let corrections = [];
+
+async function loadCorrections() {
+  try {
+    const r = await fetch(API_BASE + '/corrections');
+    if (r.ok) {
+      const d = await r.json();
+      if (Array.isArray(d)) corrections = d;
+    }
+  } catch (e) { /* offline */ }
+}
+
+// Turn past corrections into prompt guidance
+function correctionsPrompt() {
+  if (!corrections.length) return '';
+  const top = corrections.slice().sort((a,b) => (b.count||1) - (a.count||1)).slice(0, 15);
+  return '\n\nPAST MISTAKES ON THIS SITE — do not repeat these:\n' +
+    top.map(c => `• Previously called "${c.wrong}" when it was actually "${c.right}"${(c.count||1) > 1 ? ` (${c.count} times)` : ''}`).join('\n') +
+    '\nLook extra carefully when you see something resembling any of the above.';
+}
+
+function reportCorrection(wrong, right) {
+  if (!wrong || !right || wrong === right) return;
+  try {
+    fetch(API_BASE + '/corrections/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wrong: wrong, right: right })
+    }).catch(() => {});
+  } catch (e) {}
+  const ex = corrections.find(c => c.wrong === wrong && c.right === right);
+  if (ex) ex.count = (ex.count || 1) + 1;
+  else corrections.unshift({ wrong: wrong, right: right, count: 1 });
 }
 
 // ════ LEARNING CATALOGUE ════
@@ -2116,6 +2170,8 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', saveQuoteState);
 
+loadCorrections();
+
 // Sync history in the background if this device is unlocked
 if (adminKey) { syncHistory().then(retryUnsynced); }
 
@@ -2260,7 +2316,19 @@ STEP 1 — Identify systematically:
 4. Boxes, bags, and loose clutter
 5. Items partially hidden, stacked, behind other items, or in the background
 
-Be specific about SIZE (2-seater vs 3-seater sofa, single vs double mattress, TV screen size) and distinguish similar items (sofa vs sofa bed, chest of drawers vs sideboard, bookcase vs wardrobe, fridge vs fridge-freezer). Count multiples accurately. Do not invent items you cannot see.
+Be specific about SIZE (2-seater vs 3-seater sofa, single vs double mattress, TV screen size). Count multiples accurately. Do not invent items you cannot see.
+
+CRITICAL — TELLING SIMILAR ITEMS APART:
+• Wardrobe vs fridge/freezer: a fridge has a rubber door seal, a compressor grille near the floor, usually one long vertical handle, and a metal or gloss plastic finish. A wardrobe has wood, veneer or painted panels, knobs or bar handles, often mirrored doors, sits flush to the floor with no grille, and is in a bedroom. Domestic kitchens do not contain commercial/industrial fridges — only assume commercial if it is clearly a glass-fronted display or catering unit.
+• Sofa vs sofa bed: only call it a sofa bed if you can see a fold-out mechanism, a hinged seat, or it is already opened out. Otherwise it is a sofa.
+• Chest of drawers vs sideboard vs dressing table: chest of drawers is tall and narrow, drawers only, in a bedroom. Sideboard is long and low with cupboard doors, in a lounge or dining room. Dressing table is low with a mirror attached or above it.
+• Bookcase vs wardrobe vs shelving unit: bookcases have open shelves; wardrobes have full-height doors; shelving units are metal or utilitarian.
+• Fridge vs fridge-freezer: a fridge-freezer is tall with two separate doors. A single-door under-counter unit is just a fridge or freezer.
+• Washing machine vs tumble dryer vs dishwasher: washing machines have a large round glass door and a detergent drawer; dryers have a similar door but no drawer and often a vent; dishwashers have a flat front panel with no round door.
+• Dining table vs desk vs coffee table: judge by height and setting — coffee tables are low, desks have drawers or a keyboard area, dining tables have chairs around them.
+• Use the ROOM as evidence. A tall white cabinet in a bedroom is far more likely a wardrobe than a fridge.
+
+If you are genuinely unsure between two possibilities, pick the more common domestic item and mark confidence as "low".${correctionsPrompt()}
 
 STEP 2 — Match each item to this price list using EXACT names where possible:
 ${presetNames}
@@ -2322,6 +2390,8 @@ Include every visible item. Do not merge or drop items.` }
         kg: preset ? preset.kg : (d.kg || 0),
         matched: isMatched,
         estimated: !isMatched,
+        lowConf: d.confidence === 'low',
+        original: d.name,
         checked: true
       };
     });
@@ -2351,16 +2421,64 @@ function renderScanResults() {
   const el = document.getElementById('scanResults');
   el.innerHTML = scanItems.map(item => {
     const pl = typeof item.price === 'string' ? item.price : '£' + (item.price || 0).toFixed(2);
-    const estimated = item.estimated ? ' · estimated' : '';
-    return `<div class="scan-item">
+    const bits = [];
+    if (item.notes) bits.push(item.notes);
+    if (!item.matched) bits.push('custom · estimated');
+    if (item.corrected) bits.push('corrected');
+    return `<div class="scan-item${item.lowConf ? ' low-conf' : ''}">
       <div class="scan-item-check ${item.checked ? 'checked' : ''}" onclick="toggleScanItem(${item.id})"></div>
       <div class="scan-item-info">
-        <div class="scan-item-name">${item.qty > 1 ? item.qty + '× ' : ''}${item.name}</div>
-        <div class="scan-item-meta">${item.notes || ''}${!item.matched ? ' · custom' : ''}${estimated}</div>
+        <div class="scan-item-name" onclick="editScanName(${item.id}, this)" title="Tap to correct">
+          ${item.qty > 1 ? item.qty + '× ' : ''}${item.name}
+          ${item.lowConf ? '<span class="conf-flag" title="Not certain — worth checking">?</span>' : ''}
+          <span class="edit-hint">✎</span>
+        </div>
+        <div class="scan-item-meta">${bits.join(' · ')}</div>
       </div>
       <button class="scan-item-price-btn" onclick="editScanPrice(${item.id}, this)" title="Tap to edit price">${pl}</button>
     </div>`;
   }).join('');
+}
+
+// Tap an item name to correct what the AI thought it was
+function editScanName(id, el) {
+  const item = scanItems.find(i => i.id === id);
+  if (!item) return;
+  const names = [...new Set(PRESETS.map(p => p.name))];
+  const wrap = document.createElement('div');
+  wrap.className = 'name-edit-wrap';
+  wrap.innerHTML = `
+    <input class="name-edit" list="presetNames" value="${String(item.name).replace(/"/g,'&quot;')}" placeholder="What is it really?">
+    <datalist id="presetNames">${names.map(n => `<option value="${n.replace(/"/g,'&quot;')}">`).join('')}</datalist>`;
+  el.replaceWith(wrap);
+  const input = wrap.querySelector('.name-edit');
+  input.focus();
+  input.select();
+
+  const save = () => {
+    const val = input.value.trim();
+    if (val && val !== item.name) {
+      const wrong = item.original || item.name;
+      const preset = PRESETS.find(p => p.name.toLowerCase() === val.toLowerCase());
+      item.name = preset ? preset.name : val;
+      if (preset) {
+        item.price = preset.price;
+        item.kg = preset.kg;
+        item.matched = true;
+        item.estimated = false;
+      }
+      item.corrected = true;
+      item.lowConf = false;
+      reportCorrection(wrong, item.name);
+      showToast('Corrected — it will remember');
+    }
+    renderScanResults();
+  };
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') renderScanResults();
+  });
 }
 
 function editScanPrice(id, btn) {
