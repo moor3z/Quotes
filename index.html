@@ -870,17 +870,17 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
       </div>
       <div class="margin-panel" id="marginPanel">
         <button class="margin-toggle" onclick="toggleMargin()">
-          <span class="margin-toggle-lbl">Disposal &amp; margin</span>
+          <span class="margin-toggle-lbl">Estimated disposal cost</span>
           <span class="margin-summary" id="marginSummary"></span>
           <span class="margin-chev" id="marginChev">▾</span>
         </button>
         <div class="margin-body" id="marginBody">
           <div class="margin-rows" id="marginRows"></div>
           <div class="margin-foot">
-            <div class="m-row"><span class="m-lbl">Revenue (ex VAT)</span><span class="m-val" id="mRevenue">£0.00</span></div>
-            <div class="m-row"><span class="m-lbl">Disposal (ex VAT)</span><span class="m-val" id="mDisposal">£0.00</span></div>
             <div class="m-div"></div>
-            <div class="m-row m-grand"><span class="m-lbl">Gross margin</span><span class="m-val" id="mMargin">£0.00</span></div>
+            <div class="m-row"><span class="m-lbl">Subtotal (ex VAT)</span><span class="m-val" id="mDisposal">£0.00</span></div>
+            <div class="m-row"><span class="m-lbl">VAT (20%)</span><span class="m-val" id="mDisposalVat">£0.00</span></div>
+            <div class="m-row m-grand"><span class="m-lbl">Estimated tip cost</span><span class="m-val" id="mDisposalInc">£0.00</span></div>
             <div class="m-note" id="mNote"></div>
           </div>
         </div>
@@ -1444,28 +1444,40 @@ function computeDisposal(lineItems) {
     });
   });
 
-  // Tonnage rows
+  // Tonnage rows — charged on weight, with ONE overall minimum applied at the end
+  let tonnageCost = 0;
+  const tonnageRows = [];
+  let extraFees = 0;
+
   Object.keys(streams).forEach(key => {
     const cfg = WASTE_RATES[key] || WASTE_RATES.general;
     const kg = streams[key].kg;
     let tonnes = kg / 1000;
-    if (cfg.minTonne) tonnes = Math.max(tonnes, cfg.minTonne);
-    let cost = tonnes * cfg.rate;
-    const belowMin = cost < cfg.min;
-    if (belowMin) cost = cfg.min;
-    if (cfg.fee) cost += cfg.fee;
-    total += cost;
-    rows.push({
+    if (cfg.minTonne) tonnes = Math.max(tonnes, cfg.minTonne); // rubble/soil: 1t minimum quantity
+    const cost = tonnes * cfg.rate;
+    tonnageCost += cost;
+    if (cfg.fee) extraFees += cfg.fee; // e.g. asbestos consignment note
+    tonnageRows.push({
       label: cfg.label,
       detail: '£' + cfg.rate + '/t',
       kg: Math.round(kg),
       cost: cost,
-      belowMin: belowMin
+      minTonneApplied: !!(cfg.minTonne && kg / 1000 < cfg.minTonne)
     });
   });
 
-  rows.sort((a, b) => b.cost - a.cost);
-  return { rows: rows, total: total };
+  // Single overall minimum charge across the whole load
+  const OVERALL_MIN = 30;
+  let minTopUp = 0;
+  if (tonnageRows.length && tonnageCost < OVERALL_MIN) {
+    minTopUp = OVERALL_MIN - tonnageCost;
+  }
+
+  tonnageRows.sort((a, b) => b.cost - a.cost);
+  rows.push(...tonnageRows);
+  total += tonnageCost + minTopUp + extraFees;
+
+  return { rows: rows, total: total, minTopUp: minTopUp, minCharge: OVERALL_MIN, extraFees: extraFees };
 }
 
 // ════ RECOGNITION CORRECTIONS ════
@@ -1832,7 +1844,7 @@ function renderQuote() {
     document.getElementById('stickyAmt').textContent = `£${grand.toFixed(2)}`;
   }
   updateLoadRec(kg);
-  renderMargin(grand);
+  renderMargin();
   const waBtn = document.querySelector('.send-wa');
   const cpBtn = document.querySelector('.send-copy');
   if (waBtn) { waBtn.disabled = !lines.length; cpBtn.disabled = !lines.length; }
@@ -2105,35 +2117,47 @@ function toggleMargin() {
   document.getElementById('marginPanel').classList.toggle('open');
 }
 
-function renderMargin(grandIncVat) {
+function renderMargin() {
   const panel = document.getElementById('marginPanel');
   if (!panel) return;
   if (!lines.length) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
 
   const d = computeDisposal(lines);
-  const revenueExVat = grandIncVat / 1.2;
-  const margin = revenueExVat - d.total;
-  const pct = revenueExVat > 0 ? Math.round((margin / revenueExVat) * 100) : 0;
 
-  document.getElementById('marginRows').innerHTML = d.rows.map(r => `
+  let rowsHtml = d.rows.map(r => `
     <div class="m-stream">
-      <span class="m-stream-lbl">${r.label}${r.belowMin ? '<span class="m-tag m-tag-min">min</span>' : ''}${r.free ? '<span class="m-tag m-tag-free">free</span>' : ''}</span>
+      <span class="m-stream-lbl">${r.label}${r.minTonneApplied ? '<span class="m-tag m-tag-min">1t min</span>' : ''}${r.free ? '<span class="m-tag m-tag-free">free</span>' : ''}</span>
       <span class="m-stream-kg">${r.detail || ''} · ${r.kg}kg</span>
       <span class="m-stream-cost">£${r.cost.toFixed(2)}</span>
     </div>`).join('');
 
-  document.getElementById('mRevenue').textContent = '£' + revenueExVat.toFixed(2);
+  if (d.minTopUp > 0) {
+    rowsHtml += `
+    <div class="m-stream">
+      <span class="m-stream-lbl">Minimum charge top-up<span class="m-tag m-tag-min">min £${d.minCharge}</span></span>
+      <span class="m-stream-kg"></span>
+      <span class="m-stream-cost">£${d.minTopUp.toFixed(2)}</span>
+    </div>`;
+  }
+  if (d.extraFees > 0) {
+    rowsHtml += `
+    <div class="m-stream">
+      <span class="m-stream-lbl">Consignment note fee</span>
+      <span class="m-stream-kg"></span>
+      <span class="m-stream-cost">£${d.extraFees.toFixed(2)}</span>
+    </div>`;
+  }
+  document.getElementById('marginRows').innerHTML = rowsHtml;
+
+  const vat = d.total * 0.2;
+  const incVat = d.total + vat;
   document.getElementById('mDisposal').textContent = '£' + d.total.toFixed(2);
-  const mEl = document.getElementById('mMargin');
-  mEl.textContent = '£' + margin.toFixed(2) + '  (' + pct + '%)';
-  mEl.style.color = margin <= 0 ? '#f87171' : (pct < 40 ? '#fbbf24' : 'var(--accent)');
+  document.getElementById('mDisposalVat').textContent = '£' + vat.toFixed(2);
+  document.getElementById('mDisposalInc').textContent = '£' + incVat.toFixed(2);
+  document.getElementById('marginSummary').textContent = '£' + incVat.toFixed(2);
 
-  const sum = document.getElementById('marginSummary');
-  sum.textContent = '£' + margin.toFixed(0) + ' · ' + pct + '%';
-  sum.style.color = mEl.style.color;
-
-  document.getElementById('mNote').textContent = 'Tip cost only — excludes fuel, labour and vehicle time.';
+  document.getElementById('mNote').textContent = 'Rates shown per stream are ex VAT. Excludes fuel, labour and vehicle time.';
 }
 
 function dismissRestore() {
