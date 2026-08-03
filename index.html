@@ -476,6 +476,29 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 .scan-error { color: #f87171; font-size: 13px; text-align: center; padding: 8px 0; }
 
 /* ════ MOBILE ════ */
+/* ════ RESTORE BANNER ════ */
+.restore-banner {
+  display: none;
+  align-items: center; justify-content: space-between; gap: 10px;
+  margin: 10px 16px 4px; padding: 10px 12px;
+  background: rgba(0,183,235,0.08);
+  border: 1px solid rgba(0,183,235,0.3);
+  border-radius: var(--radius-sm);
+}
+.restore-banner.show { display: flex; }
+.restore-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.restore-title { font-size: 12px; font-weight: 700; color: var(--text); }
+.restore-sub { font-size: 11px; color: var(--text2); }
+.restore-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.restore-keep, .restore-discard {
+  font-size: 11px; font-weight: 700; border-radius: 5px; padding: 5px 10px; cursor: pointer;
+  transition: all 0.15s;
+}
+.restore-keep { background: var(--accent); border: 1px solid var(--accent); color: #001a22; }
+.restore-keep:hover { opacity: 0.9; }
+.restore-discard { background: none; border: 1px solid var(--border2); color: var(--text2); }
+.restore-discard:hover { border-color: #f87171; color: #f87171; }
+
 /* ════ ADMIN ════ */
 .admin-modal { max-width: 620px; width: 100%; display: flex; flex-direction: column; max-height: 88vh; }
 .admin-hdr { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border); }
@@ -700,6 +723,16 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
       </div>
     </div>
 
+    <div class="restore-banner" id="restoreBanner">
+      <div class="restore-txt">
+        <span class="restore-title">Quote restored</span>
+        <span class="restore-sub" id="restoreSub"></span>
+      </div>
+      <div class="restore-actions">
+        <button class="restore-keep" onclick="dismissRestore()">Keep</button>
+        <button class="restore-discard" onclick="discardRestore()">Start fresh</button>
+      </div>
+    </div>
     <div class="qp-lines" id="quoteLines"></div>
 
 
@@ -1154,6 +1187,49 @@ async function checkAdminKey(key) {
 }
 
 let lines = [], nextId = 1;
+
+// ════ QUOTE PERSISTENCE ════
+const QUOTE_KEY = 'tidyup_quote_v1';
+let restoreTimer = null;
+
+function saveQuoteState() {
+  try {
+    localStorage.setItem(QUOTE_KEY, JSON.stringify({
+      lines: lines,
+      nextId: nextId,
+      savedAt: Date.now()
+    }));
+  } catch (e) { /* storage full or blocked — not critical */ }
+}
+
+function loadQuoteState() {
+  try {
+    const raw = localStorage.getItem(QUOTE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data.lines || !data.lines.length) return false;
+    // Discard anything older than 24h
+    if (data.savedAt && Date.now() - data.savedAt > 86400000) {
+      localStorage.removeItem(QUOTE_KEY);
+      return false;
+    }
+    lines = data.lines;
+    nextId = data.nextId || (Math.max(0, ...lines.map(l => l.id)) + 1);
+    return true;
+  } catch (e) { return false; }
+}
+
+function clearQuoteState() {
+  try { localStorage.removeItem(QUOTE_KEY); } catch (e) {}
+}
+
+function timeAgo(ts) {
+  const mins = Math.round((Date.now() - ts) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + ' min' + (mins !== 1 ? 's' : '') + ' ago';
+  const hrs = Math.round(mins / 60);
+  return hrs + ' hour' + (hrs !== 1 ? 's' : '') + ' ago';
+}
 let activeTab = PRESETS[0].cat;
 
 
@@ -1242,6 +1318,7 @@ function clearQuote() {
   if (lines.length === 0) return;
   if (confirm('Clear all items from the quote?')) {
     lines = [];
+    clearQuoteState();
     renderQuote();
   }
 }
@@ -1416,6 +1493,7 @@ function renderQuote() {
     document.getElementById('stickyAmt').textContent = `£${grand.toFixed(2)}`;
   }
   updateLoadRec(kg);
+  saveQuoteState();
 }
 
 const LOADS = [
@@ -1447,9 +1525,34 @@ function updateLoadRec(kg) {
 
 const SAVED_KEY = '';
 if(SAVED_KEY) { const inp = document.getElementById('apiKeyInput'); if(inp) inp.value = SAVED_KEY; localStorage.setItem('anthropic_api_key', SAVED_KEY); }
+function dismissRestore() {
+  document.getElementById('restoreBanner').classList.remove('show');
+}
+
+function discardRestore() {
+  lines = [];
+  clearQuoteState();
+  dismissRestore();
+  renderQuote();
+  showToast('Started a fresh quote');
+}
+
+// Restore any in-progress quote from before the tab closed
+const restoredData = (() => {
+  try { return JSON.parse(localStorage.getItem(QUOTE_KEY) || 'null'); } catch (e) { return null; }
+})();
+const didRestore = loadQuoteState();
+
 buildCats();
 renderItems();
 renderQuote();
+
+if (didRestore) {
+  const n = lines.reduce((s,l) => s + l.qty, 0);
+  const when = restoredData && restoredData.savedAt ? timeAgo(restoredData.savedAt) : 'earlier';
+  document.getElementById('restoreSub').textContent = `${n} item${n!==1?'s':''} from ${when}`;
+  document.getElementById('restoreBanner').classList.add('show');
+}
 
 // ════ ADMIN SCREEN ════
 function openAdmin() {
@@ -1564,6 +1667,12 @@ async function adminSave() {
     }
   }
 }
+
+// Save immediately if the page is backgrounded or closed
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveQuoteState();
+});
+window.addEventListener('pagehide', saveQuoteState);
 
 // Load live catalogue from KV, then re-render if it differs
 loadCatalogue().then(loaded => {
