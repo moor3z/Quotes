@@ -476,6 +476,38 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 .scan-error { color: #f87171; font-size: 13px; text-align: center; padding: 8px 0; }
 
 /* ════ MOBILE ════ */
+/* ════ ADMIN ════ */
+.admin-modal { max-width: 620px; width: 100%; display: flex; flex-direction: column; max-height: 88vh; }
+.admin-hdr { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.admin-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.admin-close { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; padding: 4px 8px; }
+.admin-close:hover { color: var(--text); }
+.admin-body { padding: 18px; overflow-y: auto; flex: 1; min-height: 0; }
+.admin-hint { font-size: 13px; color: var(--text2); margin-bottom: 14px; line-height: 1.5; }
+.admin-input { width: 100%; background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 11px 13px; color: var(--text); font-size: 14px; outline: none; transition: border-color 0.18s; }
+.admin-input:focus { border-color: var(--accent); }
+.admin-err { color: #f87171; font-size: 12px; min-height: 18px; padding: 6px 0; }
+.admin-toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+.admin-search { flex: 1; }
+.admin-add-btn { background: var(--card2); border: 1px solid var(--accent); color: var(--accent); font-size: 12px; font-weight: 700; border-radius: var(--radius-sm); padding: 0 14px; cursor: pointer; white-space: nowrap; }
+.admin-add-btn:hover { background: var(--accent); color: #001a22; }
+.admin-list { display: flex; flex-direction: column; gap: 6px; }
+.admin-cat { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); padding: 10px 2px 4px; }
+.admin-row { display: flex; gap: 6px; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 9px; }
+.admin-row input { background: var(--card2); border: 1px solid transparent; border-radius: 5px; color: var(--text); font-size: 12px; padding: 6px 8px; outline: none; min-width: 0; }
+.admin-row input:focus { border-color: var(--accent); }
+.admin-f-name { flex: 1; }
+.admin-f-price, .admin-f-kg { width: 62px; font-family: var(--mono); text-align: right; flex-shrink: 0; }
+.admin-unit { font-size: 10px; color: var(--text3); flex-shrink: 0; }
+.admin-del { background: none; border: none; color: var(--text3); font-size: 13px; cursor: pointer; padding: 4px 6px; flex-shrink: 0; }
+.admin-del:hover { color: #f87171; }
+.admin-status { font-size: 12px; color: var(--text2); text-align: center; padding: 10px 0 0; min-height: 18px; }
+@media (max-width: 700px) {
+  .admin-modal { max-height: 92vh; }
+  .admin-f-price, .admin-f-kg { width: 56px; }
+  .admin-row input { font-size: 13px; padding: 8px; }
+}
+
 /* ════ POLISH: TOAST ════ */
 .toast {
   position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%) translateY(20px);
@@ -608,6 +640,9 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
     <button class="hdr-photo" onclick="document.getElementById('photoGal').click()" title="Choose from gallery">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       Gallery
+    </button>
+    <button class="hdr-photo" onclick="openAdmin()" title="Manage prices" style="padding:8px 11px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
     <input type="file" id="photoCam" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
     <input type="file" id="photoGal" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
@@ -802,7 +837,7 @@ function itemIcon(n) {
   return '📋';
 }
 
-const PRESETS = [
+const DEFAULT_PRESETS = [
 
   // Lounge
   { cat:"Lounge", name:"Armchair", price:40, kg:25 },
@@ -1085,6 +1120,38 @@ const PRESETS = [
   { cat:"Garage & Clearance", name:"Painting / Canvas", price:10, kg:3 },
 
 ];
+
+// ════ CATALOGUE STORAGE (Cloudflare KV) ════
+const API_BASE = 'https://anthropic-proxy.steven-d3e.workers.dev';
+let PRESETS = DEFAULT_PRESETS.slice();
+let adminKey = sessionStorage.getItem('adminKey') || '';
+
+async function loadCatalogue() {
+  try {
+    const r = await fetch(API_BASE + '/catalogue');
+    const data = await r.json();
+    if (Array.isArray(data) && data.length) {
+      PRESETS = data;
+      return true;
+    }
+  } catch (e) { /* offline or not set up — use defaults */ }
+  return false;
+}
+
+async function saveCatalogue() {
+  const r = await fetch(API_BASE + '/catalogue', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+    body: JSON.stringify(PRESETS)
+  });
+  if (!r.ok) throw new Error(r.status === 401 ? 'Wrong password' : 'Save failed');
+  return true;
+}
+
+async function checkAdminKey(key) {
+  const r = await fetch(API_BASE + '/check', { method: 'POST', headers: { 'x-admin-key': key } });
+  return r.ok;
+}
 
 let lines = [], nextId = 1;
 let activeTab = PRESETS[0].cat;
@@ -1384,6 +1451,130 @@ buildCats();
 renderItems();
 renderQuote();
 
+// ════ ADMIN SCREEN ════
+function openAdmin() {
+  document.getElementById('adminOverlay').classList.add('visible');
+  document.getElementById('adminErr').textContent = '';
+  if (adminKey) {
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminEditor').style.display = 'block';
+    document.getElementById('adminFooter').style.display = 'flex';
+    renderAdminList();
+  } else {
+    document.getElementById('adminLogin').style.display = 'block';
+    document.getElementById('adminEditor').style.display = 'none';
+    document.getElementById('adminFooter').style.display = 'none';
+    setTimeout(() => document.getElementById('adminPass').focus(), 100);
+  }
+}
+
+function closeAdmin() {
+  document.getElementById('adminOverlay').classList.remove('visible');
+}
+
+async function doAdminLogin() {
+  const key = document.getElementById('adminPass').value.trim();
+  const err = document.getElementById('adminErr');
+  if (!key) return;
+  err.textContent = 'Checking…';
+  try {
+    const ok = await checkAdminKey(key);
+    if (!ok) { err.textContent = 'Wrong password'; return; }
+    adminKey = key;
+    sessionStorage.setItem('adminKey', key);
+    document.getElementById('adminPass').value = '';
+    err.textContent = '';
+    openAdmin();
+  } catch (e) {
+    err.textContent = 'Could not connect';
+  }
+}
+
+function renderAdminList() {
+  const q = (document.getElementById('adminSearch').value || '').toLowerCase();
+  const list = document.getElementById('adminList');
+  const cats = [...new Set(PRESETS.map(p => p.cat))];
+  let html = '';
+  cats.forEach(cat => {
+    const items = PRESETS.map((p, i) => ({ p, i }))
+      .filter(({p}) => p.cat === cat && (!q || p.name.toLowerCase().includes(q) || cat.toLowerCase().includes(q)));
+    if (!items.length) return;
+    html += `<div class="admin-cat">${cat}</div>`;
+    items.forEach(({p, i}) => {
+      const priceVal = typeof p.price === 'string' ? p.price : p.price;
+      html += `<div class="admin-row">
+        <input class="admin-f-name" value="${String(p.name).replace(/"/g,'&quot;')}" oninput="adminEdit(${i},'name',this.value)">
+        <span class="admin-unit">£</span>
+        <input class="admin-f-price" value="${priceVal}" oninput="adminEdit(${i},'price',this.value)">
+        <input class="admin-f-kg" value="${p.kg||0}" oninput="adminEdit(${i},'kg',this.value)">
+        <span class="admin-unit">kg</span>
+        <button class="admin-del" onclick="adminDelete(${i})" title="Delete">✕</button>
+      </div>`;
+    });
+  });
+  list.innerHTML = html || '<div class="admin-status">No items match that filter</div>';
+}
+
+function adminEdit(idx, field, value) {
+  if (field === 'price') {
+    const n = parseFloat(value);
+    PRESETS[idx].price = isNaN(n) ? value : n;
+  } else if (field === 'kg') {
+    PRESETS[idx].kg = parseFloat(value) || 0;
+  } else {
+    PRESETS[idx][field] = value;
+  }
+  document.getElementById('adminStatus').textContent = 'Unsaved changes';
+}
+
+function adminDelete(idx) {
+  if (!confirm('Delete "' + PRESETS[idx].name + '"?')) return;
+  PRESETS.splice(idx, 1);
+  renderAdminList();
+  document.getElementById('adminStatus').textContent = 'Unsaved changes';
+}
+
+function adminAddItem() {
+  const cats = [...new Set(PRESETS.map(p => p.cat))];
+  const cat = prompt('Category for the new item:\n\n' + cats.join(', '), activeTab || cats[0]);
+  if (!cat) return;
+  const name = prompt('Item name:');
+  if (!name) return;
+  PRESETS.push({ cat: cat, name: name, price: 0, kg: 0 });
+  document.getElementById('adminSearch').value = name;
+  renderAdminList();
+  document.getElementById('adminStatus').textContent = 'Unsaved changes — set the price and weight';
+}
+
+async function adminSave() {
+  const st = document.getElementById('adminStatus');
+  st.textContent = 'Saving…';
+  try {
+    await saveCatalogue();
+    st.textContent = '✓ Saved — live on all devices';
+    buildCats();
+    renderItems();
+    showToast('Catalogue saved');
+    setTimeout(() => { st.textContent = ''; }, 2500);
+  } catch (e) {
+    st.textContent = '✕ ' + e.message;
+    if (e.message === 'Wrong password') {
+      adminKey = '';
+      sessionStorage.removeItem('adminKey');
+    }
+  }
+}
+
+// Load live catalogue from KV, then re-render if it differs
+loadCatalogue().then(loaded => {
+  if (loaded) {
+    const cats = [...new Set(PRESETS.map(p => p.cat))];
+    if (!cats.includes(activeTab)) activeTab = cats[0];
+    buildCats();
+    renderItems();
+  }
+});
+
 // ── API KEY ──
 function saveApiKey() {
   const key = document.getElementById('apiKeyInput').value.trim();
@@ -1663,6 +1854,39 @@ function closeScan() {
   scanItems = [];
 }
 </script>
+<!-- ADMIN MODAL -->
+<div class="scan-overlay" id="adminOverlay">
+  <div class="scan-modal admin-modal">
+    <div class="admin-hdr">
+      <span class="admin-title">Manage Catalogue</span>
+      <button class="admin-close" onclick="closeAdmin()">✕</button>
+    </div>
+
+    <!-- Login -->
+    <div class="admin-body" id="adminLogin">
+      <p class="admin-hint">Enter the admin password to edit prices and items.</p>
+      <input type="password" class="admin-input" id="adminPass" placeholder="Password" autocomplete="off">
+      <div class="admin-err" id="adminErr"></div>
+      <button class="parse-btn" onclick="doAdminLogin()">Unlock</button>
+    </div>
+
+    <!-- Editor -->
+    <div class="admin-body" id="adminEditor" style="display:none">
+      <div class="admin-toolbar">
+        <input type="text" class="admin-input admin-search" id="adminSearch" placeholder="Filter items…" oninput="renderAdminList()">
+        <button class="admin-add-btn" onclick="adminAddItem()">+ New Item</button>
+      </div>
+      <div class="admin-list" id="adminList"></div>
+      <div class="admin-status" id="adminStatus"></div>
+    </div>
+
+    <div class="scan-footer" id="adminFooter" style="display:none">
+      <button class="scan-cancel" onclick="closeAdmin()">Close</button>
+      <button class="scan-confirm" onclick="adminSave()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span class="tick">✓</span><span id="toastTxt"></span></div>
 <div class="sticky-total" id="stickyTotal" onclick="document.querySelector('.quote-panel').scrollIntoView({behavior:'smooth'})">
   <span class="sticky-total-items" id="stickyItems">0 items</span>
