@@ -487,6 +487,8 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 .hist-sub { font-size: 11px; color: var(--text2); margin-top: 3px; }
 .hist-del { background: none; border: none; border-left: 1px solid var(--border); color: var(--text3); font-size: 12px; cursor: pointer; padding: 0 13px; flex-shrink: 0; transition: all 0.15s; }
 .hist-del:hover { color: #f87171; background: rgba(248,113,113,0.08); }
+.hist-sync { font-size: 11px; color: var(--text2); text-align: center; min-height: 16px; padding-bottom: 8px; }
+.hist-pending { color: #fbbf24; font-size: 16px; line-height: 0; margin-left: 5px; }
 .hist-empty { color: var(--text3); font-size: 13px; text-align: center; padding: 32px 16px; line-height: 1.6; }
 .hist-empty span { font-size: 12px; color: var(--text3); opacity: 0.75; }
 
@@ -1198,7 +1200,7 @@ const DEFAULT_PRESETS = [
 // ════ CATALOGUE STORAGE (Cloudflare KV) ════
 const API_BASE = 'https://anthropic-proxy.steven-d3e.workers.dev';
 let PRESETS = DEFAULT_PRESETS.slice();
-let adminKey = sessionStorage.getItem('adminKey') || '';
+let adminKey = localStorage.getItem('adminKey') || '';
 
 async function loadCatalogue() {
   try {
@@ -1614,8 +1616,37 @@ function buildQuoteText() {
 const HISTORY_KEY = 'tidyup_history_v1';
 const HISTORY_MAX = 100;
 
+// Local cache — also the offline fallback
 function getHistory() {
   try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch (e) { return []; }
+}
+function setHistoryCache(hist) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(hist.slice(0, HISTORY_MAX))); } catch (e) {}
+}
+
+// Pull the shared history down from KV
+async function syncHistory() {
+  if (!adminKey) return false;
+  try {
+    const r = await fetch(API_BASE + '/history', { headers: { 'x-admin-key': adminKey } });
+    if (!r.ok) return false;
+    const data = await r.json();
+    if (Array.isArray(data)) { setHistoryCache(data); return true; }
+  } catch (e) { /* offline — keep local cache */ }
+  return false;
+}
+
+// Push one entry up to KV
+async function pushHistoryEntry(entry) {
+  if (!adminKey) return false;
+  try {
+    const r = await fetch(API_BASE + '/history/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+      body: JSON.stringify(entry)
+    });
+    return r.ok;
+  } catch (e) { return false; }
 }
 
 function saveToHistory(label) {
@@ -1629,18 +1660,51 @@ function saveToHistory(label) {
     lines: JSON.parse(JSON.stringify(lines)),
     total: sub + 25,
     kg: kg,
-    count: lines.reduce((s,l) => s + l.qty, 0)
+    count: lines.reduce((s,l) => s + l.qty, 0),
+    synced: false
   };
   const hist = getHistory();
   hist.unshift(entry);
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(hist.slice(0, HISTORY_MAX))); } catch (e) {}
+  setHistoryCache(hist);
+
+  // Sync in the background
+  pushHistoryEntry(entry).then(ok => {
+    if (ok) {
+      const h = getHistory();
+      const found = h.find(x => x.id === entry.id);
+      if (found) { found.synced = true; setHistoryCache(h); }
+      if (document.getElementById('historyOverlay').classList.contains('visible')) renderHistory();
+    }
+  });
   return entry;
 }
 
-function deleteHistoryEntry(id) {
+async function deleteHistoryEntry(id) {
   const hist = getHistory().filter(h => h.id !== id);
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(hist)); } catch (e) {}
+  setHistoryCache(hist);
   renderHistory();
+  if (adminKey) {
+    try {
+      await fetch(API_BASE + '/history/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ id: id })
+      });
+    } catch (e) { /* will drift out of sync — acceptable */ }
+  }
+}
+
+// Retry anything that failed to sync earlier
+async function retryUnsynced() {
+  if (!adminKey) return;
+  const hist = getHistory();
+  const pending = hist.filter(h => h.synced === false);
+  if (!pending.length) return;
+  for (const entry of pending) {
+    const ok = await pushHistoryEntry(entry);
+    if (ok) entry.synced = true;
+  }
+  setHistoryCache(hist);
 }
 
 function loadHistoryEntry(id) {
@@ -1666,9 +1730,19 @@ function fmtDate(ts) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + time;
 }
 
-function openHistory() {
+async function openHistory() {
   document.getElementById('historyOverlay').classList.add('visible');
   renderHistory();
+  if (!adminKey) {
+    document.getElementById('historySync').textContent = 'Not synced — unlock in ⚙ Settings to sync across devices';
+    return;
+  }
+  document.getElementById('historySync').textContent = 'Syncing…';
+  const ok = await syncHistory();
+  await retryUnsynced();
+  renderHistory();
+  document.getElementById('historySync').textContent = ok ? '✓ Synced across devices' : 'Offline — showing quotes saved on this device';
+  setTimeout(() => { const e = document.getElementById('historySync'); if (e && e.textContent.startsWith('✓')) e.textContent = ''; }, 2500);
 }
 function closeHistory() {
   document.getElementById('historyOverlay').classList.remove('visible');
@@ -1685,7 +1759,7 @@ function renderHistory() {
     <div class="hist-row">
       <div class="hist-main" onclick="loadHistoryEntry('${h.id}')">
         <div class="hist-top">
-          <span class="hist-label">${h.label ? h.label.replace(/</g,'&lt;') : 'Untitled quote'}</span>
+          <span class="hist-label">${h.label ? h.label.replace(/</g,'&lt;') : 'Untitled quote'}${h.synced === false ? '<span class="hist-pending" title="Not yet synced">•</span>' : ''}</span>
           <span class="hist-total">£${h.total.toFixed(2)}</span>
         </div>
         <div class="hist-sub">${fmtDate(h.at)} · ${h.count} item${h.count!==1?'s':''} · ${h.kg}kg</div>
@@ -1789,7 +1863,7 @@ async function doAdminLogin() {
     const ok = await checkAdminKey(key);
     if (!ok) { err.textContent = 'Wrong password'; return; }
     adminKey = key;
-    sessionStorage.setItem('adminKey', key);
+    localStorage.setItem('adminKey', key);
     document.getElementById('adminPass').value = '';
     err.textContent = '';
     openAdmin();
@@ -1868,7 +1942,7 @@ async function adminSave() {
     st.textContent = '✕ ' + e.message;
     if (e.message === 'Wrong password') {
       adminKey = '';
-      sessionStorage.removeItem('adminKey');
+      localStorage.removeItem('adminKey');
     }
   }
 }
@@ -1878,6 +1952,9 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveQuoteState();
 });
 window.addEventListener('pagehide', saveQuoteState);
+
+// Sync history in the background if this device is unlocked
+if (adminKey) { syncHistory().then(retryUnsynced); }
 
 // Load live catalogue from KV, then re-render if it differs
 loadCatalogue().then(loaded => {
@@ -2176,6 +2253,7 @@ function closeScan() {
       <button class="admin-close" onclick="closeHistory()">✕</button>
     </div>
     <div class="admin-body">
+      <div class="hist-sync" id="historySync"></div>
       <div class="hist-list" id="historyList"></div>
     </div>
     <div class="scan-footer">
