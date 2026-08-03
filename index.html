@@ -476,6 +476,35 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 .scan-error { color: #f87171; font-size: 13px; text-align: center; padding: 8px 0; }
 
 /* ════ MOBILE ════ */
+/* ════ ADMIN TABS / DISCOVERED ════ */
+.admin-tabs { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.admin-tab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--text2); font-size: 12px; font-weight: 700; letter-spacing: 0.03em;
+  padding: 8px 12px; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 7px; margin-bottom: -1px;
+}
+.admin-tab:hover { color: var(--text); }
+.admin-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.disc-badge { background: var(--accent); color: #001a22; font-size: 10px; font-weight: 700; border-radius: 100px; padding: 1px 7px; }
+.disc-row { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 11px; display: flex; flex-direction: column; gap: 8px; }
+.disc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.disc-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.disc-count { font-size: 10px; color: var(--text3); white-space: nowrap; flex-shrink: 0; }
+.disc-fields { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.disc-fields select, .disc-fields input {
+  background: var(--card2); border: 1px solid transparent; border-radius: 5px;
+  color: var(--text); font-size: 12px; padding: 6px 8px; outline: none;
+}
+.disc-fields select:focus, .disc-fields input:focus { border-color: var(--accent); }
+.disc-cat { flex: 1; min-width: 120px; }
+.disc-price, .disc-kg { width: 58px; font-family: var(--mono); text-align: right; }
+.disc-actions { display: flex; gap: 6px; margin-left: auto; }
+.disc-add { background: var(--accent); border: none; color: #001a22; font-size: 11px; font-weight: 700; border-radius: 5px; padding: 6px 12px; cursor: pointer; }
+.disc-add:hover { opacity: 0.9; }
+.disc-skip { background: none; border: 1px solid var(--border2); color: var(--text3); font-size: 11px; font-weight: 600; border-radius: 5px; padding: 6px 10px; cursor: pointer; }
+.disc-skip:hover { border-color: #f87171; color: #f87171; }
+
 /* ════ HISTORY ════ */
 .hist-list { display: flex; flex-direction: column; gap: 7px; }
 .hist-row { display: flex; align-items: stretch; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
@@ -1224,6 +1253,21 @@ async function saveCatalogue() {
   return true;
 }
 
+// ════ LEARNING CATALOGUE ════
+// Report an item the AI priced itself, so it can be reviewed and added properly
+function reportDiscovered(name, price, kg) {
+  if (!name) return;
+  // Skip if it already exists in the catalogue
+  if (PRESETS.some(p => p.name.toLowerCase() === String(name).toLowerCase())) return;
+  try {
+    fetch(API_BASE + '/discovered/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, price: price || 0, kg: kg || 0 })
+    }).catch(() => {});
+  } catch (e) { /* never block the quote */ }
+}
+
 async function checkAdminKey(key) {
   const r = await fetch(API_BASE + '/check', { method: 'POST', headers: { 'x-admin-key': key } });
   return r.ok;
@@ -1442,6 +1486,7 @@ Be generous with matching — "sofa" should match "Sofa (3-seater)", "double bed
       const price = isMatched ? preset.price : Math.round(d.estimatedPrice || 6);
       const kg = isMatched ? preset.kg : (d.kg || 0);
       for (let q = 0; q < (d.qty || 1); q++) {
+        if (!isMatched && q === 0) reportDiscovered(d.name, price, kg);
         addItem(preset ? preset.name : d.name, price, kg, true);
         added++;
       }
@@ -1841,7 +1886,15 @@ function openAdmin() {
     document.getElementById('adminLogin').style.display = 'none';
     document.getElementById('adminEditor').style.display = 'block';
     document.getElementById('adminFooter').style.display = 'flex';
+    switchAdminTab('catalogue');
     renderAdminList();
+    // Quietly check how many items are waiting for review
+    fetch(API_BASE + '/discovered', { headers: { 'x-admin-key': adminKey } })
+      .then(r => r.ok ? r.json() : [])
+      .then(d => {
+        discovered = (d || []).filter(x => !PRESETS.some(p => p.name.toLowerCase() === x.name.toLowerCase()));
+        updateDiscBadge();
+      }).catch(() => {});
   } else {
     document.getElementById('adminLogin').style.display = 'block';
     document.getElementById('adminEditor').style.display = 'none';
@@ -1870,6 +1923,116 @@ async function doAdminLogin() {
   } catch (e) {
     err.textContent = 'Could not connect';
   }
+}
+
+// ════ DISCOVERED ITEMS ════
+let discovered = [];
+
+function switchAdminTab(tab) {
+  const isCat = tab === 'catalogue';
+  document.getElementById('tabCatalogue').classList.toggle('active', isCat);
+  document.getElementById('tabDiscovered').classList.toggle('active', !isCat);
+  document.getElementById('paneCatalogue').style.display = isCat ? 'block' : 'none';
+  document.getElementById('paneDiscovered').style.display = isCat ? 'none' : 'block';
+  if (!isCat) loadDiscovered();
+}
+
+async function loadDiscovered() {
+  const el = document.getElementById('discList');
+  el.innerHTML = '<div class="admin-status">Loading…</div>';
+  try {
+    const r = await fetch(API_BASE + '/discovered', { headers: { 'x-admin-key': adminKey } });
+    if (!r.ok) { el.innerHTML = '<div class="admin-status">Could not load</div>'; return; }
+    discovered = await r.json();
+    // Hide anything already added to the catalogue
+    discovered = discovered.filter(d => !PRESETS.some(p => p.name.toLowerCase() === d.name.toLowerCase()));
+    renderDiscovered();
+    updateDiscBadge();
+  } catch (e) {
+    el.innerHTML = '<div class="admin-status">Offline</div>';
+  }
+}
+
+function updateDiscBadge() {
+  const b = document.getElementById('discBadge');
+  if (!b) return;
+  if (discovered.length) { b.textContent = discovered.length; b.style.display = 'inline-block'; }
+  else { b.style.display = 'none'; }
+}
+
+function renderDiscovered() {
+  const el = document.getElementById('discList');
+  if (!discovered.length) {
+    el.innerHTML = '<div class="hist-empty">Nothing new yet.<br><span>Items the AI has to price itself will appear here for review.</span></div>';
+    return;
+  }
+  const cats = [...new Set(PRESETS.map(p => p.cat))];
+  el.innerHTML = discovered.map((d, i) => `
+    <div class="disc-row">
+      <div class="disc-head">
+        <span class="disc-name">${d.name.replace(/</g,'&lt;')}</span>
+        <span class="disc-count">seen ${d.count}×</span>
+      </div>
+      <div class="disc-fields">
+        <select class="disc-cat" id="dcat${i}">
+          ${cats.map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
+        </select>
+        <span class="admin-unit">£</span>
+        <input class="disc-price" id="dprice${i}" value="${d.price || 0}">
+        <input class="disc-kg" id="dkg${i}" value="${d.kg || 0}">
+        <span class="admin-unit">kg</span>
+        <div class="disc-actions">
+          <button class="disc-skip" onclick="dismissDiscovered(${i})">Dismiss</button>
+          <button class="disc-add" onclick="acceptDiscovered(${i})">Add</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function removeDiscovered(name) {
+  try {
+    await fetch(API_BASE + '/discovered/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+      body: JSON.stringify({ name: name })
+    });
+  } catch (e) {}
+}
+
+async function acceptDiscovered(i) {
+  const d = discovered[i];
+  if (!d) return;
+  const cat = document.getElementById('dcat' + i).value;
+  const price = parseFloat(document.getElementById('dprice' + i).value) || 0;
+  const kg = parseFloat(document.getElementById('dkg' + i).value) || 0;
+
+  PRESETS.push({ cat: cat, name: d.name, price: price, kg: kg });
+  const st = document.getElementById('adminStatus');
+  st.textContent = 'Adding ' + d.name + '…';
+  try {
+    await saveCatalogue();
+    await removeDiscovered(d.name);
+    discovered.splice(i, 1);
+    renderDiscovered();
+    updateDiscBadge();
+    buildCats();
+    renderItems();
+    st.textContent = '✓ Added to catalogue';
+    showToast(d.name + ' added to catalogue');
+    setTimeout(() => { st.textContent = ''; }, 2000);
+  } catch (e) {
+    PRESETS.pop();
+    st.textContent = '✕ ' + e.message;
+  }
+}
+
+async function dismissDiscovered(i) {
+  const d = discovered[i];
+  if (!d) return;
+  await removeDiscovered(d.name);
+  discovered.splice(i, 1);
+  renderDiscovered();
+  updateDiscBadge();
 }
 
 function renderAdminList() {
@@ -2230,6 +2393,7 @@ function confirmScan() {
   const picked = scanItems.filter(i => i.checked);
   let total = 0;
   picked.forEach(item => {
+    if (item.estimated) reportDiscovered(item.name, item.price, item.kg);
     for (let q = 0; q < item.qty; q++) { addItem(item.name, item.price, item.kg, true); total++; }
   });
   closeScan();
@@ -2281,11 +2445,24 @@ function closeScan() {
 
     <!-- Editor -->
     <div class="admin-body" id="adminEditor" style="display:none">
-      <div class="admin-toolbar">
-        <input type="text" class="admin-input admin-search" id="adminSearch" placeholder="Filter items…" oninput="renderAdminList()">
-        <button class="admin-add-btn" onclick="adminAddItem()">+ New Item</button>
+      <div class="admin-tabs">
+        <button class="admin-tab active" id="tabCatalogue" onclick="switchAdminTab('catalogue')">Catalogue</button>
+        <button class="admin-tab" id="tabDiscovered" onclick="switchAdminTab('discovered')">Discovered <span class="disc-badge" id="discBadge" style="display:none">0</span></button>
       </div>
-      <div class="admin-list" id="adminList"></div>
+
+      <div id="paneCatalogue">
+        <div class="admin-toolbar">
+          <input type="text" class="admin-input admin-search" id="adminSearch" placeholder="Filter items…" oninput="renderAdminList()">
+          <button class="admin-add-btn" onclick="adminAddItem()">+ New Item</button>
+        </div>
+        <div class="admin-list" id="adminList"></div>
+      </div>
+
+      <div id="paneDiscovered" style="display:none">
+        <p class="admin-hint">Items the AI priced itself because they weren't on your list. Set a category and price, then add them permanently.</p>
+        <div class="admin-list" id="discList"></div>
+      </div>
+
       <div class="admin-status" id="adminStatus"></div>
     </div>
 
