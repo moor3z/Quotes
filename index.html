@@ -539,6 +539,39 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
 .hist-empty { color: var(--text3); font-size: 13px; text-align: center; padding: 32px 16px; line-height: 1.6; }
 .hist-empty span { font-size: 12px; color: var(--text3); opacity: 0.75; }
 
+/* ════ DISPOSAL & MARGIN (internal) ════ */
+.margin-panel { margin-top: 14px; border: 1px solid var(--border2); border-radius: var(--radius-sm); overflow: hidden; background: rgba(255,255,255,0.02); }
+.margin-toggle {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  background: none; border: none; cursor: pointer;
+  padding: 10px 12px; color: var(--text2);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.margin-toggle:hover { color: var(--text); }
+.margin-toggle-lbl { flex-shrink: 0; }
+.margin-summary { margin-left: auto; font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.margin-chev { font-size: 10px; transition: transform 0.2s; }
+.margin-panel.open .margin-chev { transform: rotate(180deg); }
+.margin-body { display: none; padding: 0 12px 12px; }
+.margin-panel.open .margin-body { display: block; }
+.margin-rows { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; }
+.m-stream { display: flex; align-items: baseline; gap: 8px; font-size: 12px; }
+.m-stream-lbl { flex: 1; color: var(--text2); min-width: 0; }
+.m-stream-kg { font-family: var(--mono); font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.m-stream-cost { font-family: var(--mono); color: var(--text); flex-shrink: 0; min-width: 54px; text-align: right; }
+.m-tag { font-size: 9px; font-weight: 700; border-radius: 3px; padding: 1px 4px; margin-left: 5px; }
+.m-tag-min { background: rgba(148,163,184,0.18); color: var(--text2); }
+.m-tag-chk { background: rgba(251,191,36,0.18); color: #fbbf24; }
+.m-tag-free { background: rgba(34,197,94,0.18); color: #4ade80; }
+.margin-foot { border-top: 1px solid var(--border); padding-top: 8px; }
+.m-row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; }
+.m-lbl { font-size: 12px; color: var(--text2); }
+.m-val { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.m-div { height: 1px; background: var(--border); margin: 6px 0; }
+.m-grand .m-lbl { font-size: 13px; font-weight: 700; color: var(--text); }
+.m-grand .m-val { font-size: 16px; font-weight: 700; }
+.m-note { font-size: 10px; color: var(--text3); margin-top: 7px; line-height: 1.45; }
+
 /* ════ SEND ROW ════ */
 .send-row { display: flex; gap: 7px; margin-top: 14px; }
 .send-wa {
@@ -723,7 +756,7 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
   .catalogue { display: none; }
   .quote-panel { height: auto; overflow: visible; background: #fff; }
   .qp-lines { overflow: visible; }
-  .hdr-export, .custom-row, .ql-del, .ql-ctrl { display: none; }
+  .hdr-export, .custom-row, .ql-del, .ql-ctrl, .margin-panel, .send-row { display: none !important; }
   .qp-totals { background: #fff; }
   .t-lbl, .t-val, .grand-lbl { color: #000; }
   .grand-val, .ql-amt, .icard-price { color: #0077aa; }
@@ -834,6 +867,23 @@ body { height: 100%; background: var(--bg); color: var(--text); font-family: var
       <div class="grand-row">
         <span class="grand-lbl">Total inc. VAT</span>
         <span class="grand-val" id="grandTotal">£25.00</span>
+      </div>
+      <div class="margin-panel" id="marginPanel">
+        <button class="margin-toggle" onclick="toggleMargin()">
+          <span class="margin-toggle-lbl">Disposal &amp; margin</span>
+          <span class="margin-summary" id="marginSummary"></span>
+          <span class="margin-chev" id="marginChev">▾</span>
+        </button>
+        <div class="margin-body" id="marginBody">
+          <div class="margin-rows" id="marginRows"></div>
+          <div class="margin-foot">
+            <div class="m-row"><span class="m-lbl">Revenue (ex VAT)</span><span class="m-val" id="mRevenue">£0.00</span></div>
+            <div class="m-row"><span class="m-lbl">Disposal (ex VAT)</span><span class="m-val" id="mDisposal">£0.00</span></div>
+            <div class="m-div"></div>
+            <div class="m-row m-grand"><span class="m-lbl">Gross margin</span><span class="m-val" id="mMargin">£0.00</span></div>
+            <div class="m-note" id="mNote"></div>
+          </div>
+        </div>
       </div>
       <div class="send-row" id="sendRow">
         <button class="send-wa" onclick="sendWhatsApp()">
@@ -1304,6 +1354,120 @@ function parseItemsJson(raw) {
   }
 }
 
+// ════ DISPOSAL COSTS ════
+// Tonnage rates, ex-VAT per tonne. "min" is the minimum charge for that stream.
+const WASTE_RATES = {
+  bulky:        { label: 'Bulky (furniture & mattresses)', rate: 195, min: 30 },
+  general:      { label: 'Commercial general',             rate: 175, min: 30 },
+  construction: { label: 'Mixed construction',             rate: 140, min: 30 },
+  roofing:      { label: 'Roofing (battens, felt)',        rate: 175, min: 30 },
+  gypsum:       { label: 'Gypsum / plasterboard',          rate: 130, min: 30 },
+  wood:         { label: 'Wood',                           rate: 85,  min: 30 },
+  green:        { label: 'Green waste',                    rate: 85,  min: 30 },
+  rubble:       { label: 'Clean rubble',                   rate: 25,  min: 25, minTonne: 1 },
+  soil:         { label: 'Soil',                           rate: 25,  min: 25, minTonne: 1 },
+  farmplastic:  { label: 'Farm plastics',                  rate: 185, min: 30 },
+  asbestos:     { label: 'Asbestos',                       rate: 500, min: 500, fee: 50 }
+};
+
+// Items charged per unit rather than by weight. Checked before tonnage streams.
+const UNIT_DISPOSAL = [
+  { test: /american|commercial fridge|commercial freezer|glass front/i, cost: 45, label: 'Fridges — American / commercial' },
+  { test: /fridge|freezer/i,                                            cost: 35, label: 'Fridges & freezers — domestic' },
+  { test: /\btv\b|television|washing machine|washer-dryer|tumble dryer|dishwasher|oven|cooker|microwave|monitor|computer|laptop|printer|console|stereo|speaker|hi-fi|soundbar|vacuum|kettle|toaster|air fryer|food processor|small appliance|extractor|dehumidifier|carpet cleaner/i, cost: 0, label: 'Electricals — no charge (scrap)' }
+];
+
+function unitDisposalFor(name) {
+  const n = name || '';
+  for (const rule of UNIT_DISPOSAL) {
+    if (rule.test.test(n)) return rule;
+  }
+  return null;
+}
+
+// Which tonnage stream an item belongs to
+function classifyWaste(name, cat) {
+  const n = (name || '').toLowerCase();
+  const c = (cat || '').toLowerCase();
+
+  if (n.includes('asbestos')) return 'asbestos';
+  if (/rubble|concrete|patio slab|brick|paving|hardcore|tile\b/.test(n)) return 'rubble';
+  if (/\bsoil\b|turf/.test(n)) return 'soil';
+  if (/plasterboard|gypsum/.test(n)) return 'gypsum';
+  if (/roofing|felt|batten/.test(n)) return 'roofing';
+  if (/farm plastic|silage/.test(n)) return 'farmplastic';
+  if (/garden waste|green waste|grass|leaves|hedge|plant pot|compost/.test(n)) return 'green';
+  if (/timber|decking|fence panel|wood offcut|wooden|plywood|pallet|shed|log\b|gate|summerhouse|greenhouse|workbench/.test(n)) return 'wood';
+  if (/kitchen unit|worktop|radiator|toilet|sink|bathtub|bath\b|shower|door|window|cupboard|larder|fireplace/.test(n)) return 'construction';
+  if (c.includes('bathroom')) return 'construction';
+  if (/sofa|armchair|mattress|bed\b|bed frame|wardrobe|chest of drawers|sideboard|dressing table|bookcase|cabinet|desk|chair|table|stool|cot\b|drawers|shelving|bench|lounger|recliner|pouffe|footstool|rug|carpet|curtain|cushion|duvet|bedding|pram|push chair|wheelchair|hospital bed|piano|organ|drum|snooker|pool table|treadmill|cross trainer|rowing machine|exercise bike|weight bench|trampoline|hot tub|swing|slide|sand pit|kennel|hutch|dog bed|safe\b/.test(n)) return 'bulky';
+  if (/lounge|bedroom|soft furnishings|office|baby|mobility/.test(c)) return 'bulky';
+
+  return 'general';
+}
+
+// Total disposal cost: per-unit charges plus tonnage streams
+function computeDisposal(lineItems) {
+  const streams = {};   // weight-based
+  const units = {};     // per-unit charges
+
+  lineItems.forEach(l => {
+    const rule = unitDisposalFor(l.name);
+    if (rule) {
+      if (!units[rule.label]) units[rule.label] = { qty: 0, kg: 0, each: rule.cost };
+      units[rule.label].qty += l.qty;
+      units[rule.label].kg += (l.kg || 0) * l.qty;
+      return; // charged per unit, not by weight
+    }
+    const preset = PRESETS.find(p => p.name === l.name);
+    const key = classifyWaste(l.name, preset ? preset.cat : '');
+    const kg = (l.kg || 0) * l.qty;
+    if (!kg) return;
+    if (!streams[key]) streams[key] = { kg: 0 };
+    streams[key].kg += kg;
+  });
+
+  let total = 0;
+  const rows = [];
+
+  // Per-unit rows first
+  Object.keys(units).forEach(label => {
+    const u = units[label];
+    const cost = u.qty * u.each;
+    total += cost;
+    rows.push({
+      label: label,
+      detail: u.qty + ' × £' + u.each,
+      kg: Math.round(u.kg),
+      cost: cost,
+      free: u.each === 0
+    });
+  });
+
+  // Tonnage rows
+  Object.keys(streams).forEach(key => {
+    const cfg = WASTE_RATES[key] || WASTE_RATES.general;
+    const kg = streams[key].kg;
+    let tonnes = kg / 1000;
+    if (cfg.minTonne) tonnes = Math.max(tonnes, cfg.minTonne);
+    let cost = tonnes * cfg.rate;
+    const belowMin = cost < cfg.min;
+    if (belowMin) cost = cfg.min;
+    if (cfg.fee) cost += cfg.fee;
+    total += cost;
+    rows.push({
+      label: cfg.label,
+      detail: '£' + cfg.rate + '/t',
+      kg: Math.round(kg),
+      cost: cost,
+      belowMin: belowMin
+    });
+  });
+
+  rows.sort((a, b) => b.cost - a.cost);
+  return { rows: rows, total: total };
+}
+
 // ════ RECOGNITION CORRECTIONS ════
 let corrections = [];
 
@@ -1668,6 +1832,7 @@ function renderQuote() {
     document.getElementById('stickyAmt').textContent = `£${grand.toFixed(2)}`;
   }
   updateLoadRec(kg);
+  renderMargin(grand);
   const waBtn = document.querySelector('.send-wa');
   const cpBtn = document.querySelector('.send-copy');
   if (waBtn) { waBtn.disabled = !lines.length; cpBtn.disabled = !lines.length; }
@@ -1934,6 +2099,41 @@ async function copyQuote() {
     catch (e2) { showToast('Could not copy'); }
     document.body.removeChild(ta);
   }
+}
+
+function toggleMargin() {
+  document.getElementById('marginPanel').classList.toggle('open');
+}
+
+function renderMargin(grandIncVat) {
+  const panel = document.getElementById('marginPanel');
+  if (!panel) return;
+  if (!lines.length) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  const d = computeDisposal(lines);
+  const revenueExVat = grandIncVat / 1.2;
+  const margin = revenueExVat - d.total;
+  const pct = revenueExVat > 0 ? Math.round((margin / revenueExVat) * 100) : 0;
+
+  document.getElementById('marginRows').innerHTML = d.rows.map(r => `
+    <div class="m-stream">
+      <span class="m-stream-lbl">${r.label}${r.belowMin ? '<span class="m-tag m-tag-min">min</span>' : ''}${r.free ? '<span class="m-tag m-tag-free">free</span>' : ''}</span>
+      <span class="m-stream-kg">${r.detail || ''} · ${r.kg}kg</span>
+      <span class="m-stream-cost">£${r.cost.toFixed(2)}</span>
+    </div>`).join('');
+
+  document.getElementById('mRevenue').textContent = '£' + revenueExVat.toFixed(2);
+  document.getElementById('mDisposal').textContent = '£' + d.total.toFixed(2);
+  const mEl = document.getElementById('mMargin');
+  mEl.textContent = '£' + margin.toFixed(2) + '  (' + pct + '%)';
+  mEl.style.color = margin <= 0 ? '#f87171' : (pct < 40 ? '#fbbf24' : 'var(--accent)');
+
+  const sum = document.getElementById('marginSummary');
+  sum.textContent = '£' + margin.toFixed(0) + ' · ' + pct + '%';
+  sum.style.color = mEl.style.color;
+
+  document.getElementById('mNote').textContent = 'Tip cost only — excludes fuel, labour and vehicle time.';
 }
 
 function dismissRestore() {
